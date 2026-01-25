@@ -30,30 +30,39 @@ The following directives are supported:
 
 =over
 
-=item ErrorLog value
-
+=item ErrorLog <stderr | syslog | |program | pathname>
 
 Specifies the file to use for logging information, errors, and
-debugging information. "stderr" specifies that the messages
-should be sent to the standard error file. "syslog" specifies
-that the messages should be logged via the syslog interface. If
-I<value> begins with the pipe (|) character, the rest of the
-value is treated as a command to pipe the error messages into.
-Otherwise, I<value> is treated as an absolute filename. The
-default is "stderr".
+debugging information:
 
-=item HostnameLookups value
+    stderr     -- messages are sent to standard error.
+    syslog     -- messages are logged via syslog(3)
+    |program   -- pipes error messages to a program
+    pathname   -- appends to a specified filename (e.g. /var/log/newsd.log)
+
+When "|program" is employed, typically a program like I<logger(3)> is used, e.g.
+
+    ErrorLog |/usr/bin/logger --msgid newsd
+
+It is strongly recommended that absolute paths be used with "program" to
+avoid security issues with a possible insecure PATH environment variable.
+
+The default is "stderr".
+
+=item HostnameLookups <on|off>
 
 When a client connects to the news server, this directive
-controls whether the server looks up the client's IP address.
-I<Value> can be "off" to disable IP address lookups (the IP
-address will be logged instead), "on" to enable IP address
-lookups, or "double" to enable IP address lookup and
-verification. The default is "off".
+controls whether the server looks up the client's IP address:
 
-=item Listen address:port
+    off    -- disable IP address lookups (only IP addresses are logged)
+    on     -- enable IP address lookups
+    double -- enable IP address lookup and verification.
 
-=item Listen port
+The default is "off".
+
+=item Listen <address>:<port>
+
+=item Listen <port>
 
 Listens on the specified address and/or port number for new
 connections. I<Address> can be an IP address, hostname, or "*"
@@ -61,66 +70,70 @@ to specify the "any" address; if no address is specified, "*" is
 assumed. I<Port> can be a port number or TCP service name. The
 default is to listen on address "*" (any) and port "nntp" (119).
 
-=item LogLevel value
+=item LogLevel <error|info|debug>
 
+Specifies the type of information to be logged:
 
-Specifies the amount of information to log; "error" specifies
-that only error messages should be logged. "info" specifies that
-informational and error messages should be logged. "debug"
-specifies that debugging, informational, and error messages
-should be logged. The default is "info".
+    error   -- only error messages are logged.
+    info    -- informational and error messages are logged.
+    debug   -- debugging, informational, and error messages are logged.
 
-=item MaxClients number
+The default is "info".
 
+=item MaxClients <value>
 
-Specifies the maximum number of simultaneous clients. If
-I<number> is 0, then there is no limit. The default is 0.
+Specifies the maximum number of simultaneous clients. A <value> of 0
+indicates there is no limit.
 
-=item MaxLogSize value
+The default is 0.
 
+=item MaxLogSize <value>
 
 Specifies the maximum size for the newsd log file before it's
-automatically rotated. Value is in bytes. A value of 0 disables 
-automatic size checks. The default is 1000000.
+automatically rotated. Value is in bytes. A value of 0 disables
+automatic size checks.
 
-=item ServerName name
+The default is 1000000 (one megabyte).
 
+=item ServerName <name>
 
-Specifies the hostname that is reported to clients. The default
-is the name reported by I<hostname(1)>.
+Specifies the hostname reported to NNTP clients.
+The default is the name reported by I<hostname(1)>.
 
-=item SendMail command
+=item SendMail <command>
 
+Specifies the command (and any options) to use when sending mail messages.
 
-Specifies the command to use when sending mail messages. The
-default is "/usr/local/sbin/sendmail".
+The default is "/usr/local/sbin/sendmail".
 
-=item SpoolDir directory
-
+=item SpoolDir <directory>
 
 Specifies the root directory for newsgroup files and directories.
+
 The default is "/var/spool/newsd".
 
-=item Timeout seconds
-
+=item Timeout <seconds>
 
 Specifies the number of seconds to keep an idle news client
-connection open; specify 0 to disable the idle timeout. The
-default is 43200 seconds (12 hours).
+connection open; specify 0 to disable the idle timeout.
 
-=item User name
+The default is 43200 seconds (12 hours).
 
+=item User <username>
 
-Specifies the user account the I<newsd> process will run
-under. The default user account is "news".
+Specifies the user account the I<newsd> process will run as.
+This user should exist in the /etc/passwd file, and is typically
+assigned to a similarly named user group.
 
-=item Auth.User username
+The default user account name is "news".
 
-=item Auth.Pass password
+=item Auth.User <username>
 
-=item Auth.Protect read|post|all
+=item Auth.Pass <password>
 
-=item Auth.Sleep seconds
+=item Auth.Protect <read|post|all>
+
+=item Auth.Sleep <seconds>
 
 Sets the username and password used to authenticate access to the news server.
 Auth.Protect sets which operations the user/password protects; "read" protects
@@ -138,7 +151,7 @@ Example: Leaves reading and posting 'open', without any authentication:
     Auth.Pass      -
     Auth.Protect   -
 
-Example: Protects posting with the username 'foo' password 'bar', 
+Example: Protects posting with the username 'foo' password 'bar',
 while allowing anonymous read access:
 
     Auth.User      foo
@@ -151,7 +164,7 @@ Example: Protects reading and posting with the username 'foo' password 'bar':
     Auth.Pass      bar
     Auth.Protect   all
 
-=item NoRecurseMsgDir [yes|no]
+=item NoRecurseMsgDir <yes|no>
 
 If enabled, prevents newsd from looking for subgroups in dirs that contain
 messages.
@@ -163,40 +176,104 @@ Disable if you plan to have groups that contain msgs AND subgroups.
 Otherwise, leave enabled to help NNTP commands (eg. "LIST") respond
 quickly when groups have many articles.
 
-=item MsgModDirs [yes|no]
+=item MsgModDirs <yes|no>
 
 Optimization: save articles in subdirs modulus 1000
 
-Use this if groups will contain many thousands of articles.
-Helps prevent OS having to walk large linear directories of articles.
-Enabling this feature ensures there are no more than 1000 articles
-in a dir at a time.
+Use this if groups will be large and contain many thousands of articles.
+Helps prevent OS having to walk large linear directories of articles
+by breaking them up into subdirectories not more than 1000 articles each.
 
-So when disabled, articles are saved this way:
+So when disabled with "no", articles are saved this way:
 
-    /path/fltk/general/0/{1,2,3..99998,99999,100000,100001..}
+    /path/fltk/general/1
+    /path/fltk/general/2
+    /path/fltk/general/3
+            :
+    /path/fltk/general/99998
+    /path/fltk/general/99999
+    /path/fltk/general/100000
+    /path/fltk/general/100001
+            :
+	   etc
 
 ..and when this feature is enabled, articles are saved this way:
 
-    /path/fltk/general/0/{1,2,3..998,999}
-    /path/fltk/general/1000/{1000,1001,1002..1998,1999}
-    /path/fltk/general/2000/{2000,2001,2002..2998,2999}
-    ..etc..
+    /path/fltk/general/0/1
+    /path/fltk/general/0/2
+    /path/fltk/general/0/3
+            :
+    /path/fltk/general/0/998
+    /path/fltk/general/0/999
+    /path/fltk/general/1000/1000
+    /path/fltk/general/1000/1001
+    /path/fltk/general/1000/1002
+            :
+    /path/fltk/general/1000/1998
+    /path/fltk/general/1000/1999
+    /path/fltk/general/2000/2000
+    /path/fltk/general/2000/2001
+            :
+	   etc
 
-If enabled, then groups cannot have entirely numeric names (eg. "alt.1000"),
+If enabled, then groups should not have entirely numeric names (e.g. "alt.1000"),
 to prevent newsd from confusing message dirs with group names.
+
+=item PostCommand <- | program>
+
+Sets an optional program (or script) to be run immediately after a
+new newsgroup article has been saved into the spool directory with
+an article number assigned to it.
+
+The command can also contain space separated arguments, such as to invoke a script
+with a named interpreter, e.g.
+
+    PostCommand /usr/bin/python3 /path/to/myscript.py
+                ---------------- --------------------
+		Interpreter      Script path
+
+At the time the script runs, three arguments are appended to the command in
+the following order: <group> <article#> <msgpath>, where:
+
+    <group>      -- full groupname, e.g. "fltk.general"
+    <article#>   -- the unique article#, e.g. "12037"
+    <msgpath>    -- the absolute path to the article file, e.g. /some/path/spool/fltk/general/12037
+
+Example: If the newsd.conf file contains:
+
+    PostCommand /path/to/my_script
+    SpoolDir    /var/spool/news
+    MsgModDirs  yes
+
+..and a new article #12037 for group "fltk.general" has just been posted
+(either via NNTP, or added via the "newsd -mailgateway"), then the full
+command invoked to post-process the article passed to I<system(3)> would be:
+
+    /path/to/myscript fltk.general 12037 /var/spool/news/fltk/general/10000/12037
+    ----------------- ------------ ----- ----------------------------------------
+              |            |         |                    |           \____/
+            <cmd>       <group>   <msgnum>             <msgpath>       MsgModDir
+
+The "myscript" program can then use the arguments to post-process the article
+if need be. For example, converting the article to HTML format, and expand
+mime attachments.
+
+WARNING: It is strongly advised that only absolute paths are used for
+the PostCommand to avoid security issues with a possibly insecure PATH
+environment variable.  The command is executed I<system(3)>, running as
+the configured news user.
+
+The default is "-", which disables the use of a post command.
 
 =back
 
-=head1 NEWSGROUP FILES AND DIRECTORY
+=head1 SPOOL DIRECTORY, ".config" AND ".info" FILES
 
 The /var/spool/news directory contains all the newsgroups and
 articles with one file per article and one directory per
 newsgroup.
 
-
-
-The directory hierarchy dictates the available news 
+The directory hierarchy dictates the available news
 groups, e.g.
 
     /var/spool/news/rush/general
@@ -208,13 +285,14 @@ filename being the article's number, eg:
     /var/spool/news/rush/general/1
     /var/spool/news/rush/general/2
     /var/spool/news/rush/general/3
+    \_____________/\___________/\_/
+           |            |        |
+        SpoolDir      Group   Articles
 
-would be the pathnames for the three news articles whose
+..would be the pathnames for the three news articles whose
 article numbers are 1, 2 and 3. Each article contains the
 complete ascii text of the article, including the article's
 header and message body, as per RFC 1036.
-
-
 
 The directory permissions should be:
 
@@ -235,32 +313,33 @@ which might look like:
     postok      1
     postlimit   1000
     ccpost      erco@domain.com
-    replyto	-
+    replyto     -
 
-Any newsgroup directory that does I<not> have a .config file 
+Any newsgroup directory that does I<not> have a .config file
 will not show up in users' news readers.
 
 Manual modification of these files should be done carefully  if
 the I<newsd> daemon is running. Do the following to prevent
 I<newsd> from loading a file while it is being edited:
 
-1) Make a copy of the file called ".config.new".
+  1) Make a copy of the file called ".config.new".
+  2) Modify the copy.
+  3) Rename the copy to ".config" to make it take effect.
 
-2) Modify the copy.
+=head2 GROUP ".config" FILES
 
-3) Rename the copy to ".config" to make it take effect.
-
-=head1 THE .CONFIG FILE FORMAT
-
-Each group's .config file is in a simple plain text format similar
-to newsd.conf:
+Each group's ".config" file is in a simple plain text format
+similar to newsd.conf file, and appears in the spool directory
+for each group:
 
 =over
 
 =item description text
 
 Specifies the one line description of this group, which shows up
-when people first subscribe to the newsgroup.
+when people first subscribe to the newsgroup. Example:
+
+    description rush general discussions.
 
 =item creator email-address
 
@@ -268,27 +347,32 @@ Specifies the email address of the owner of this group. Where
 mail should be sent regarding questions about the maintenance
 and administration of the group. This address is also used as
 the Errors-To: address for all email messages sent by newsd.
+Example:
 
-=item postok value
+    creator   manager@somedomain.com
 
+=item postok 0|1
 
-Controls whether articles can be posted to this group. "0"
-indicates posting is not allowed (read-only group) while "1"
-indicates anyone can post to this group. The default value is
-"1".
+Controls whether articles can be posted to this group.
+
+    0 -- indicates posting is not allowed (read-only group)
+    1 -- indicates anyone can post to this group.
+
+The default value is "1". Example:
+
+    postok 0
 
 =item postlimit number-lines
 
-
 Specifies the maximum number of lines in an article. Articles
 will be rejected if they exceed this value. Set this value to
-"0" to disable the limit. The default limit is "1000".
+"0" to disable the limit. The default limit is "1000". Example:
+
+    postlimit 10000
 
 =item ccpost address[,address,...]
 
-
 =item ccpost -
-
 
 Sets the list of email addresses to be cc'ed whenever a posting
 is made to the group. If set to '-', no email is sent. A single
@@ -296,7 +380,6 @@ line of addresses may not exceed 255 characters; to make longer
 lists of addresses, use separate lines, eg:
 
     ccpost a@foo.com,b@foo.com,c@foo.com
-    ccpost d@foo.com
 
 Or to make things more readable, use one address per line:
 
@@ -313,18 +396,20 @@ The default is "-".
 Specifies an email address for the Reply-To header. This forces
 replies to be sent to the specifies address, typically a mail
 gateway back to the newsgroup. If set to "-", no Reply-To header
-will be sent. The default is "-".
+will be sent.
+
+The default is "-".
 
 =back
 
-=head1 .INFO FILES
+=head2 GROUP ".info" FILES
 
 I<newsd> automatically creates and maintains little ".info"
 files in each active group's directory. Each file maintains
 runtime information about that group's news articles.
 
-Normally these files are automatically created and maintained, 
-and should not be administered by hand unless manually fixing 
+Normally these files are automatically created and maintained,
+and should not be administered by hand unless manually fixing
 a problem, in which case the daemon should not be running.
 
 =head1 SEE ALSO

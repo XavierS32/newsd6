@@ -1,6 +1,9 @@
 newsd -- Change Log
 -------------------
 
+1.60 -- July 18, 2024
+        - Added optional -post-command command line flag
+
 1.54 -- July 26, 2022
         - Added ErrorLog.Hex to newsd.conf
 	  Translates non-ascii text messages from remote to <0x##> format

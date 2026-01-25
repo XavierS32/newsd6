@@ -2,7 +2,7 @@
 // Server.C -- News server class
 //
 // Copyright 2003-2004 Michael Sweet
-// Copyright 2002 Greg Ercolano
+// Copyright 2002-2024 Greg Ercolano
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -107,7 +107,7 @@ int Server::ValidGroup(const char *groupname)
 // FIND GROUP, UPDATE START/END/TOTAL INFO
 int Server::NewGroup(const char *the_group)
 {
-    if ( ValidGroup(the_group) < 0 ) 
+    if ( ValidGroup(the_group) < 0 )
 	{ return(-1); }
 
     if ( group.LoadInfo(the_group) < 0 )
@@ -119,7 +119,7 @@ int Server::NewGroup(const char *the_group)
 // BREAK A LONG LINE INTO SMALLER PIECES
 //    Useful for breaking eg. a big Bcc: list into separate lines.
 //
-void BreakLineToFP(FILE *fp, 
+void BreakLineToFP(FILE *fp,
 		   const char *prefix, 		// prefix, eg. "Bcc: "
 		   const char *line, 		// long line, eg. "a,b,c,d"
 		   const char *trail,		// trailing chars, eg. "\n"
@@ -228,7 +228,7 @@ static void sigalrm_handler(int)
 //	  AUTH_READ  -- allowed to read?
 //	  AUTH_POST  -- allowed to post?
 //    Returns: 1 if ok, 0 if not sends a proper error
-//          
+//
 int Server::IsAllowed(int op)
 {
     if ( ! G_conf.IsAuthAllowed(op) )
@@ -276,7 +276,7 @@ int Server::CommandLoop(const char *overview[])
 	    if ( *ss == '\r' )
 	    {
 	        read(msgsock, ss, 1);		// skip \n
-		*ss = 0; 
+		*ss = 0;
 		found = 1;
 		break;
 	    }
@@ -426,7 +426,7 @@ int Server::CommandLoop(const char *overview[])
 	         arg1[0] == 0 )				// RFC 977
 	    {
 	        // "LIST ACTIVE rush.*"
-		if ( strcasecmp(cmd, "LIST") == 0 && 
+		if ( strcasecmp(cmd, "LIST") == 0 &&
 		     strcasecmp(arg1, "ACTIVE") == 0 &&
 		     arg2[0] != 0 )
 		{
@@ -465,7 +465,7 @@ int Server::CommandLoop(const char *overview[])
 		    Group tgroup;
 		    if ( tgroup.LoadInfo(groupnames[t].c_str()) < 0 )
 		        { continue; }
-		    snprintf(reply, sizeof(reply), "%s %ld %s", 
+		    snprintf(reply, sizeof(reply), "%s %ld %s",
 		        (const char*)tgroup.Name(),
 		        (long)tgroup.Ctime(),
 			(const char*)tgroup.Creator());
@@ -539,7 +539,7 @@ int Server::CommandLoop(const char *overview[])
 	    {
 		if ( group.LoadInfo(arg1) < 0 )
 		{
-		    snprintf(reply, sizeof(reply), "411 No such newsgroup: %s", 
+		    snprintf(reply, sizeof(reply), "411 No such newsgroup: %s",
 		        (const char*)group.Errmsg());
 		    Send(reply);
 		    group = restore;
@@ -648,7 +648,7 @@ int Server::CommandLoop(const char *overview[])
 
 	    if ( group.LoadInfo(arg1) < 0 )
 	    {
-		snprintf(reply, sizeof(reply), "411 No such newsgroup: %s", 
+		snprintf(reply, sizeof(reply), "411 No such newsgroup: %s",
 		    (const char*)group.Errmsg());
 		Send(reply);
 		group = restore;
@@ -664,10 +664,10 @@ int Server::CommandLoop(const char *overview[])
 	    //           l = last article number in the group,
 	    //           s = name of the group.)
 	    //
-	    snprintf(reply, sizeof(reply), "211 %lu %lu %lu %s group selected", 
-		(ulong)group.Total(), 
-		(ulong)group.Start(), 
-		(ulong)group.End(), 
+	    snprintf(reply, sizeof(reply), "211 %lu %lu %lu %s group selected",
+		(ulong)group.Total(),
+		(ulong)group.Start(),
+		(ulong)group.End(),
 		(const char*)group.Name());
 	    Send(reply);
 	    continue;
@@ -741,7 +741,7 @@ int Server::CommandLoop(const char *overview[])
 	    }
 	    Send(".");		// for now, nothing matches
 	    continue;
-	    
+	
 /**** TBD
 		if ( tgroup.Ctime() > checktime )
 		    { Send(tgroup.Name()); }
@@ -844,7 +844,7 @@ int Server::CommandLoop(const char *overview[])
 
 	    if ( article.Load(group.Name(), the_article) < 0 )
 	    {
-		snprintf(reply, sizeof(reply), "430 no such article: %s", 
+		snprintf(reply, sizeof(reply), "430 no such article: %s",
 		    (const char*)article.Errmsg());
 		Send(reply);
 		continue;
@@ -854,18 +854,18 @@ int Server::CommandLoop(const char *overview[])
 	    if ( strcasecmp(cmd, "ARTICLE") == 0 )
 	    {
 		snprintf(reply, sizeof(reply),
-		    "220 %lu %s article retrieved - head and body follow", 
-		    (ulong)the_article, 
+		    "220 %lu %s article retrieved - head and body follow",
+		    (ulong)the_article,
 		    (const char*)article.MessageID());
 		Send(reply);
-	        article.SendArticle(msgsock); 
+	        article.SendArticle(msgsock);
 		Send(".");
 	    }
 	    else if ( strcasecmp(cmd, "HEAD") == 0 )
 	    {
 		snprintf(reply, sizeof(reply),
-		    "221 %lu %s article retrieved - head follows", 
-		    (ulong)the_article, 
+		    "221 %lu %s article retrieved - head follows",
+		    (ulong)the_article,
 		    (const char*)article.MessageID());
 		Send(reply);
 	        article.SendHead(msgsock);
@@ -874,8 +874,8 @@ int Server::CommandLoop(const char *overview[])
 	    else if ( strcasecmp(cmd, "BODY") == 0 )
 	    {
 		snprintf(reply, sizeof(reply),
-		    "222 %lu %s article retrieved - body follows", 
-		    (ulong)the_article, 
+		    "222 %lu %s article retrieved - body follows",
+		    (ulong)the_article,
 		    (const char*)article.MessageID());
 		Send(reply);
 	        article.SendBody(msgsock);
@@ -885,8 +885,8 @@ int Server::CommandLoop(const char *overview[])
 	    else if ( strcasecmp(cmd, "STAT") == 0 )
 	    {
 		snprintf(reply, sizeof(reply),
-		    "223 %lu %s article retrieved - request text separately", 
-		    (ulong)the_article, 
+		    "223 %lu %s article retrieved - request text separately",
+		    (ulong)the_article,
 		    (const char*)article.MessageID());
 		Send(reply);
 	    }
@@ -957,8 +957,8 @@ int Server::CommandLoop(const char *overview[])
 	    // POSTING TOO LONG? FAIL
 	    if ( toolong )
 	    {
-		snprintf(reply, sizeof(reply), 
-		    "411 Not Posted: article exceeds sanity line limit of %d.", 
+		snprintf(reply, sizeof(reply),
+		    "411 Not Posted: article exceeds sanity line limit of %d.",
 		    (int)group.PostLimit());
 		Send(reply);
 		continue;
@@ -1105,7 +1105,7 @@ int Server::CommandLoop(const char *overview[])
 	}
 
 	Send("500 Command not understood");
-	continue; 
+	continue;
     }
 
     close(msgsock);
@@ -1117,7 +1117,7 @@ int Server::CommandLoop(const char *overview[])
 // OPEN A TCP LISTENER ON THE CONFIGURED ADDRESS AND PORT
 int Server::Listen()
 {
-    if ((sock = socket (AF_INET,SOCK_STREAM,0)) < 0) 
+    if ((sock = socket (AF_INET,SOCK_STREAM,0)) < 0)
 	{ errmsg = "socket(): "; errmsg += strerror(errno); return(-1); }
 
     // Allow reuse of address to avoid "bind(): address already in use"
@@ -1139,7 +1139,7 @@ int Server::Listen()
     }
 
     while (bind(sock, (struct sockaddr*)G_conf.Listen(),
-                sizeof(struct sockaddr_in)) < 0) 
+                sizeof(struct sockaddr_in)) < 0)
 	{ perror("binding stream socket"); sleep(5); continue; }
 
     if ( listen(sock,5) < 0 )
@@ -1151,7 +1151,7 @@ int Server::Listen()
 // ACCEPT CONNECTIONS FROM REMOTE
 int Server::Accept(ostringstream& remote_info)
 {
-//    fprintf(stderr, "Listening for connect requests on port %d\n", 
+//    fprintf(stderr, "Listening for connect requests on port %d\n",
 //        (int)port);
 
 #if defined(__APPLE__)
@@ -1165,7 +1165,7 @@ int Server::Accept(ostringstream& remote_info)
     msgsock = accept(sock, (struct sockaddr*)&sin, (socklen_t*)&length);
 #endif
 
-    if (msgsock < 0) 
+    if (msgsock < 0)
     {
         errmsg = "accept(): ";
 	errmsg += strerror(errno);

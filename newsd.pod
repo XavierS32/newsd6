@@ -46,13 +46,13 @@ log messages going to "stderr".
 
 =item -f
 
-Run in the foreground; normally newsd will put itself in the background 
-once it has loaded the configuration  file  and  setup  its networking 
+Run in the foreground; normally newsd will put itself in the background
+once it has loaded the configuration  file  and  setup  its networking
 functions.
 
 =item -mailgateway <group>
 
-Used in /etc/aliases to gateway emails to a newsgroup. 
+Used in /etc/aliases to gateway emails to a newsgroup.
 See L<Configuring a Mail Gateway> below.
 
 =item -preserve-date
@@ -63,7 +63,7 @@ field of the incoming message, instead of rewriting it with the current date.
 =item -newgroup
 
 Interactively prompts for the creation of a new newsgroup.
-Administrators should use this to create a new newsgroup. 
+Administrators should use this to create a new newsgroup.
 See L<Creating New Groups> for an example session.
 
 =item -rotate
@@ -85,7 +85,7 @@ daemon is running using the  following commands:
     newsd -newgroup
 
 You will be prompted for the new group's information.
-Here's an example interactive session; '-->' indicates 
+Here's an example interactive session; '-->' indicates
 administrator's keyboard input:
 
     -->  # newsd -newgroup
@@ -143,7 +143,7 @@ take effect.
     |              |     |
     Setuid       Owner  Group
 
-Use 'chown root:mail newsd' and 'chmod 4750 newsd' to enforce 
+Use 'chown root:mail newsd' and 'chmod 4750 newsd' to enforce
 these permissions. If your mail server uses a group other than
 "mail", use the corresponding group name so that only the mail
 server and root can execute the newsd program.
@@ -179,7 +179,7 @@ Some NNTP commands are not supported, including searching by
 message id. Grep the code for 'TODO' to see what needs to be
 added.
 
-There is currently no way to constrain posting or readership 
+There is currently no way to constrain posting or readership
 to particular IP addresses or domains.
 
 There are probably ways to cause a denial of service.

@@ -1,8 +1,9 @@
+// vim: autoindent tabstop=8 shiftwidth=4 expandtab softtabstop=4
 //
 // Group.H -- Manage newsgroup groups
 //
 // Copyright 2003 Michael Sweet
-// Copyright 2002 Greg Ercolano
+// Copyright 2002-2024 Greg Ercolano
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -24,27 +25,27 @@
 #define GROUP_H
 
 #include "everything.H"
-#include "Article.H"		/* e.g. Article::GetArticlePath() */
+#include "Article.H"            /* e.g. Article::GetArticlePath() */
 class Group
 {
     // ".info" FILE DATA
-    ulong start, end, total;	// start/end/total articles
+    ulong start, end, total;    // start/end/total articles
 
     // ".config" FILE DATA
-    string desc;	// group description
-    string creator;	// group creator email
-    string name;	// group name
-    string ccpost;	// email address to cc all postings to
-    string replyto;	// optional replyto address
-    string voidemail;	// bit bucket email address
-    int postok,		// allow posting to this group
-	postlimit;	// posting line limit
+    string desc;        // group description
+    string creator;     // group creator email
+    string name;        // group name
+    string ccpost;      // email address to cc all postings to
+    string replyto;     // optional replyto address
+    string voidemail;   // bit bucket email address
+    int postok,         // allow posting to this group
+        postlimit;      // posting line limit
 
-    string dirname;	// full path to group, "/var/spool/newsd/foo/bar"
-    time_t ctime;	// creation time
-    int valid;		// is group valid? 0=invalid
-    string errmsg;	// error message
-    char datebuf[80];	// RFC822 date buffer
+    string dirname;     // full path to group, "/var/spool/newsd/foo/bar"
+    time_t ctime;       // creation time
+    int valid;          // is group valid? 0=invalid
+    string errmsg;      // error message
+    char datebuf[80];   // RFC822 date buffer
 
     // GENERAL LOCKING
     //    Write lock whenever posting or saving info file.
@@ -71,46 +72,46 @@ class Group
         start     = o.start;
         end       = o.end;
         total     = o.total;
-	desc      = o.desc;
-	creator   = o.creator;
-	name      = o.name;
-	ccpost    = o.ccpost;
-	replyto   = o.replyto;
-	voidemail = o.voidemail;
-	postok    = o.postok;
-	postlimit = o.postlimit;
-	ctime     = o.ctime;
-	valid     = o.valid;
+        desc      = o.desc;
+        creator   = o.creator;
+        name      = o.name;
+        ccpost    = o.ccpost;
+        replyto   = o.replyto;
+        voidemail = o.voidemail;
+        postok    = o.postok;
+        postlimit = o.postlimit;
+        ctime     = o.ctime;
+        valid     = o.valid;
     }
 
 public:
     Group()
     {
         start = end = total = 0;
-	desc = "";
-	creator = "news";
-	name = "";
-	ccpost = "-";
-	replyto = "-";
-	voidemail = "root";
-	postok = 0;
-	postlimit = 0;
-	ctime = 0;
-	valid = 0;
+        desc = "";
+        creator = "news";
+        name = "";
+        ccpost = "-";
+        replyto = "-";
+        voidemail = "root";
+        postok = 0;
+        postlimit = 0;
+        ctime = 0;
+        valid = 0;
     }
 
     ~Group()
-	{ }
+        { }
 
     Group(const Group&o)
     {
         _Copy(o);
     }
-    
+
     Group& operator=(const Group&o)
     {
         _Copy(o);
-	return(*this);
+        return(*this);
     }
 
     // ACCESSORS
@@ -144,9 +145,9 @@ public:
     int LoadInfo(const char *group, int dolock = 1);
     int LoadInfo(string& group, int dolock = 1) { return LoadInfo(group.c_str(), dolock); }
     int WriteInfo(int fd);
-    int Post(const char*overview[], vector<string> &head, 
-    	     vector<string> &body, const char *remoteip_str, 
-	     bool force=false, bool preservedate=false);
+    int Post(const char*overview[], vector<string> &head,
+             vector<string> &body, const char *remoteip_str,
+             bool force=false, bool preservedate=false);
     const char* Dirname();
 
     int NewGroup();

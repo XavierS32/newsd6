@@ -1,8 +1,9 @@
+// vim: autoindent tabstop=8 shiftwidth=4 expandtab softtabstop=4
 //
 // Configuration.H -- News Configuration Class
 //
 // Copyright 2003-2004 Michael Sweet
-// Copyright 2002 Greg Ercolano
+// Copyright 2002-2024 Greg Ercolano
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -28,46 +29,47 @@
 // Log levels...
 enum
 {
-    L_ERROR,				// Show error messages
-    L_INFO,				// Show error + info messages
-    L_DEBUG				// Show error + info + debug messages
+    L_ERROR,                            // Show error messages
+    L_INFO,                             // Show error + info messages
+    L_DEBUG                             // Show error + info + debug messages
 };
 
 // This class holds all of the global configuration information...
 class Configuration
 {
-    int		hostnamelookups;	// do hostname lookups?
+    int         hostnamelookups;        // do hostname lookups?
     int         norecurse_msgdir;       // when searching for groups, don't recurse into msg dirs
     int         msgmod_dirs;            // Use modulus msg dirs, eg. 100/{100,101,102..199}
-    struct sockaddr_in listen;		// Listen address
-    string	errorlog;		// Log file
+    struct sockaddr_in listen;          // Listen address
+    string      errorlog;               // Log file
     int         errorlog_hex;           // Log non-ASCII chars in hex, e.g. <0x##>
-    int		loglevel;		// Log level
-    FILE	*log;			// Stream for logging
-    ino_t	log_ino;		// Inode # for log (detects rotation)
-    long	maxlogsize;		// max log size in bytes (0=unlimited)
-    unsigned	maxclients;		// maximum number of child processes
-    string	sendmail;		// sendmail command
-    string	servername;		// news server hostname
-    string	spamfilter;		// spam filter command
-    string	spooldir;		// spool directory
-    unsigned	timeout;		// #secs timeout after inactivity
-    string	user;			// user to run as
+    int         loglevel;               // Log level
+    FILE        *log;                   // Stream for logging
+    ino_t       log_ino;                // Inode # for log (detects rotation)
+    long        maxlogsize;             // max log size in bytes (0=unlimited)
+    unsigned    maxclients;             // maximum number of child processes
+    string      sendmail;               // sendmail command
+    string      servername;             // news server hostname
+    string      spamfilter;             // spam filter command
+    string      spooldir;               // spool directory
+    string      postcommand;            // command to run after article posted
+    unsigned    timeout;                // #secs timeout after inactivity
+    string      user;                   // user to run as
 
-    uid_t	uid;			// user ID
-    gid_t	gid;			// group ID
-    bool	bad_user;		// true means username was not found
+    uid_t       uid;                    // user ID
+    gid_t       gid;                    // group ID
+    bool        bad_user;               // true means username was not found
 
-    string      auth_user;		// auth username
-    string      auth_pass;		// auth password
-    unsigned    auth_sleep;		// #secs to sleep if auth fails
-    int         auth_flags;		// authentication flags
-    int         auth_protect;		// authentication protection flags
+    string      auth_user;              // auth username
+    string      auth_pass;              // auth password
+    unsigned    auth_sleep;             // #secs to sleep if auth fails
+    int         auth_flags;             // authentication flags
+    int         auth_protect;           // authentication protection flags
 
-    int		lookup_user(const char *name);
-    int		OpenLogAppend();
-    bool	WasLogRotated();
-    void	FixNewsLogDir(const char* newslogdir);
+    int         lookup_user(const char *name);
+    int         OpenLogAppend();
+    bool        WasLogRotated();
+    void        FixNewsLogDir(const char* newslogdir);
 
 public:
 
@@ -136,6 +138,10 @@ public:
     void SpoolDir(const char *d) { spooldir = d; };
     const char *SpoolDir() { return (spooldir.c_str()); }
 
+    // Get/set the post command...
+    void PostCommand(const char *val) { postcommand = val ? val : "-"; }
+    const char *PostCommand() { return (postcommand.c_str()); }
+
     // Get/set the current Timeout option...
     void Timeout(unsigned val) { timeout = val; }
     unsigned Timeout() { return (timeout); }
@@ -158,14 +164,14 @@ public:
     // Are we authorized to do an operation?
     int IsAuthAllowed(int op_flag) const
     {
-        //// fprintf(stderr, "AUTH_FLAGS=%d AUTH_PROT=%d USER=%s PASS=%s\n", 
+        //// fprintf(stderr, "AUTH_FLAGS=%d AUTH_PROT=%d USER=%s PASS=%s\n",
         ////     auth_flags, auth_protect, auth_user.c_str(), auth_pass.c_str());
 
-	// Authenticated if OK or NONE (no authentication needed)
-	if ( auth_flags & AUTH_NOAUTH ) return(1);		// everything allowed? OK
-	if ( ( auth_protect & op_flag ) == 0 ) return(1);	// this op not protected? OK
-	if ( ( auth_flags & op_flag ) == op_flag ) return(1);	// this op authenticated? OK
-	return(0);						// deny
+        // Authenticated if OK or NONE (no authentication needed)
+        if ( auth_flags & AUTH_NOAUTH ) return(1);              // everything allowed? OK
+        if ( ( auth_protect & op_flag ) == 0 ) return(1);       // this op not protected? OK
+        if ( ( auth_flags & op_flag ) == op_flag ) return(1);   // this op authenticated? OK
+        return(0);                                              // deny
     }
     int AuthLogin(const string&, const string&);
 

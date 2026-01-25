@@ -1,7 +1,9 @@
+// vim: autoindent tabstop=8 shiftwidth=4 expandtab softtabstop=4
+//
 // newsd -- A simple news server - erco@3dsite.com
 //
 // Copyright 2003-2004 Michael Sweet
-// Copyright 2002 Greg Ercolano
+// Copyright 2002-2024 Greg Ercolano
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -19,9 +21,9 @@
 //
 // This program was designed based on the RFCs:
 //
-//	rfc1036.txt
-//	rfc2980.txt
-//	rfc977.txt
+//      rfc1036.txt
+//      rfc2980.txt
+//      rfc977.txt
 //
 // TODO:
 //      Should probably reorganize both NNTP headers and mail headers
@@ -33,12 +35,12 @@
 //      IPv6 support!
 //
 
-#define _BSD_SIGNALS 1			/* IRIX */
-#define _USE_BSD			/* LINUX */
-#define _BSD				/* OSF1 */
+#define _BSD_SIGNALS 1                  /* IRIX */
+#define _USE_BSD                        /* LINUX */
+#define _BSD                            /* OSF1 */
 
 // Convenience macro...
-#define ISHEAD(a)	(strncasecmp(head[t].c_str(), (a), strlen(a))==0)
+#define ISHEAD(a)       (strncasecmp(head[t].c_str(), (a), strlen(a))==0)
 
 #include "Server.H"
 
@@ -69,16 +71,16 @@ static const char *overview[] =
 void sigcld_handler(int)
 {
     // REAPER
-    //    for() limits #children reaped at a time mainly to prevent 
+    //    for() limits #children reaped at a time mainly to prevent
     //    possible infinite loop.
     //
-    pid_t	pid;			// Process ID
-    int		status;			// Exit status
+    pid_t       pid;                    // Process ID
+    int         status;                 // Exit status
 
     for (int t = 0; t < 100 && (pid = waitpid(-1, &status, WNOHANG)) > 0; t ++)
     {
-        if ( pid > 0 && G_numclients > 0 ) 
-	    G_numclients --;
+        if ( pid > 0 && G_numclients > 0 )
+            G_numclients --;
     }
 }
 
@@ -87,12 +89,12 @@ void HelpAndExit()
     fputs("newsd - a simple news daemon (V " VERSION ")\n"
           "        See LICENSE file packaged with newsd for license/copyright info.\n"
           "\n"
-	  "Usage:\n"
+          "Usage:\n"
           "    newsd [-c configfile] [-d] [-f]             -- start server\n"
-	  "    newsd -mailgateway <group> [-preserve-date] -- gateway an email (stdin) into specified <group>\n"
-	  "    newsd -newgroup                             -- used to create new groups\n"
-	  "    newsd -rotate                               -- force log rotation\n",
-	  stderr);
+          "    newsd -mailgateway <group> [-preserve-date] -- gateway an email (stdin) into specified <group>\n"
+          "    newsd -newgroup                             -- used to create new groups\n"
+          "    newsd -rotate                               -- force log rotation\n",
+          stderr);
     exit(1);
 }
 
@@ -108,8 +110,8 @@ int RunAs()
     {
         gid_t gid = G_conf.GID();
         setgroups(1, &gid);
-	if ( setgid(gid) < 0 ) { perror("newsd: setgid()"); err = 1; }
-	if ( setuid(G_conf.UID()) < 0 ) { perror("newsd: setuid()"); err = 1; }
+        if ( setgid(gid) < 0 ) { perror("newsd: setgid()"); err = 1; }
+        if ( setuid(G_conf.UID()) < 0 ) { perror("newsd: setuid()"); err = 1; }
     }
 
     return(err);
@@ -119,7 +121,7 @@ int RunAs()
 //     Returns:
 //         0 on success (dir exists or was created OK)
 //        -1 on error, prints reason on stderr
-//     
+//
 int CreateSpoolDir()
 {
     const char *spooldir = G_conf.SpoolDir();
@@ -127,29 +129,29 @@ int CreateSpoolDir()
     if ( stat(spooldir, &buf) == -1 )
     {
         // Spool dir doesn't exist? Create it..
-	if ( mkdir(spooldir, 0755) == -1 )		// mkdir failed?
-	{
-	    // Failed..
-	    string emsg = "mkdir('";
-		   emsg += spooldir;
-		   emsg += "')";
-	    perror(emsg.c_str());
-	    return -1;
-	}
+        if ( mkdir(spooldir, 0755) == -1 )              // mkdir failed?
+        {
+            // Failed..
+            string emsg = "mkdir('";
+                   emsg += spooldir;
+                   emsg += "')";
+            perror(emsg.c_str());
+            return -1;
+        }
     }
     // Make sure spooldir owned by configured news user
     if ( chown(spooldir, G_conf.UID(), G_conf.GID()) == -1 )
     {
-	// Failed..
-	string emsg = "chown('";
-	       emsg += spooldir;
-	       emsg += "',";
-	       emsg += G_conf.UID();
-	       emsg += ",";
-	       emsg += G_conf.GID();
-	       emsg += ")";
-	perror(emsg.c_str());
-	return -1;
+        // Failed..
+        string emsg = "chown('";
+               emsg += spooldir;
+               emsg += "',";
+               emsg += G_conf.UID();
+               emsg += ",";
+               emsg += G_conf.GID();
+               emsg += ")";
+        perror(emsg.c_str());
+        return -1;
     }
     return 0;
 }
@@ -202,53 +204,53 @@ void DeadLetter(const char *errmsg, vector<string>&head, vector<string>&body)
 //    Reads email message from stdin.
 //
 int MailGateway(const char *groupname,
-		bool preservedate=0)
+                bool preservedate)
 {
     Group group;
     if ( group.LoadInfo(groupname) < 0 )
     {
-	fprintf(stderr, "newsd: Unknown group \"%s\": %s\n", groupname,
+        fprintf(stderr, "newsd: Unknown group \"%s\": %s\n", groupname,
                 group.Errmsg());
-	return(1);
+        return(1);
     }
 
     // COLLECT EMAIL FROM STDIN
     int linechars = 0,
-	linecount = 0,
-	toolong = 0;
+        linecount = 0,
+        toolong = 0;
     char c;
     string msg;
 
     // CONVERT EMAIL HEADER -> NEWSGROUP HEADER
     {
-	// Newsgroups:
-	msg = "Newsgroups: ";
-	msg += groupname;
-	msg += "\r\n";
+        // Newsgroups:
+        msg = "Newsgroups: ";
+        msg += groupname;
+        msg += "\r\n";
 
-	// X-News-Gateway:
-	//    I pulled this outta my ass; need some way to indicate
-	//    msg passed through a mail -> news gateway.
-	//
-	msg += "X-Mail-To-News-Gateway: via newsd ";
-	msg += VERSION;
-	msg += "\r\n";
+        // X-News-Gateway:
+        //    I pulled this outta my ass; need some way to indicate
+        //    msg passed through a mail -> news gateway.
+        //
+        msg += "X-Mail-To-News-Gateway: via newsd ";
+        msg += VERSION;
+        msg += "\r\n";
     }
 
     while (read(0, &c, 1) == 1 )
     {
         if ( c == '\r' ) continue;              // ignore \r, we handle it ourself
 
-	// KEEP TRACK OF #LINES
-	//    Lines longer than 80 chars count as multiple lines.
-	//    If posting too long, stop accumulating message in ram,
-	//    but keep reading until they've sent the terminating "."
-	//
-	++linechars;
-	if ( linechars > 80 || c == '\n' )
-	    { linechars = 0; linecount++; }
-	if ( group.PostLimit() > 0 && linecount > group.PostLimit() )
-	    { toolong = 1; continue; }
+        // KEEP TRACK OF #LINES
+        //    Lines longer than 80 chars count as multiple lines.
+        //    If posting too long, stop accumulating message in ram,
+        //    but keep reading until they've sent the terminating "."
+        //
+        ++linechars;
+        if ( linechars > 80 || c == '\n' )
+            { linechars = 0; linecount++; }
+        if ( group.PostLimit() > 0 && linecount > group.PostLimit() )
+            { toolong = 1; continue; }
 
         if ( c == '\n' ) msg += '\r';
         msg += c;
@@ -257,9 +259,9 @@ int MailGateway(const char *groupname,
     // POSTING TOO LONG? FAIL
     if ( toolong )
     {
-	fprintf(stderr, "newsd: Article not posted to %s: longer than %d lines.\n",
-	        groupname, group.PostLimit());
-	return(1);
+        fprintf(stderr, "newsd: Article not posted to %s: longer than %d lines.\n",
+                groupname, group.PostLimit());
+        return(1);
     }
 
     // BLESS ARTICLE -- VERIFY HEADER INTEGRITY, ADD NEEDED HEADERS
@@ -267,9 +269,9 @@ int MailGateway(const char *groupname,
     vector<string> body;
     if ( group.ParseArticle(msg, head, body) < 0 )
     {
-	fprintf(stderr, "newsd: Article not posted to %s: %s.\n",
-	        groupname, group.Errmsg());
-	return(1);
+        fprintf(stderr, "newsd: Article not posted to %s: %s.\n",
+                groupname, group.Errmsg());
+        return(1);
     }
 
     // UPDATE 'Path:'
@@ -278,29 +280,29 @@ int MailGateway(const char *groupname,
     // CHECK FOR LOOPS, MASSAGE HEADERS
     for ( uint t=0; t<head.size(); t++ )
     {
-	// CONVERT RFC822 "From .." -> "X-Original-From: .."
-	if ( ISHEAD("From ") )
-	{
-	    string newfrom = head[t];
-	    newfrom.replace(0, strlen("From "), "X-Original-From: ");
-	    head[t] = newfrom;
-	}
-	// SHORT CIRCUIT LOOP DELIVERY
-	//     Example: "X-Loop: outOfSpace"
-	//
-	else if ( ISHEAD("X-Newsd-Loop:") || ISHEAD("X-Loop:") )
-	{
-	    string errmsg = "newsd: -mailgateway ";
-	    errmsg += groupname;
-	    errmsg += ": NOT POSTED: '";
-	    errmsg += head[t];
-	    errmsg += "' mail loop detected: message dropped to "
-	              SPOOL_DIR "/.deadletters";
-	    DeadLetter(errmsg.c_str(), head, body);
-	    fprintf(stderr, "%s\n", 
-	        (const char*)errmsg.c_str());
-	    return(1);
-	}
+        // CONVERT RFC822 "From .." -> "X-Original-From: .."
+        if ( ISHEAD("From ") )
+        {
+            string newfrom = head[t];
+            newfrom.replace(0, strlen("From "), "X-Original-From: ");
+            head[t] = newfrom;
+        }
+        // SHORT CIRCUIT LOOP DELIVERY
+        //     Example: "X-Loop: outOfSpace"
+        //
+        else if ( ISHEAD("X-Newsd-Loop:") || ISHEAD("X-Loop:") )
+        {
+            string errmsg = "newsd: -mailgateway ";
+            errmsg += groupname;
+            errmsg += ": NOT POSTED: '";
+            errmsg += head[t];
+            errmsg += "' mail loop detected: message dropped to "
+                      SPOOL_DIR "/.deadletters";
+            DeadLetter(errmsg.c_str(), head, body);
+            fprintf(stderr, "%s\n",
+                (const char*)errmsg.c_str());
+            return(1);
+        }
     }
 
     {for (uint t=0; t<head.size(); t++) { G_conf.LogMessage(L_DEBUG, "Gateway Post: --- head[%03d]: '%s'\n", t, head[t].c_str()); } }
@@ -311,89 +313,89 @@ int MailGateway(const char *groupname,
     //
     if ( group.Post(overview, head, body, "localhost", true, preservedate) < 0 )
     {
-	fprintf(stderr, "newsd: Article not posted to %s: %s.\n",
-	        groupname, group.Errmsg());
-	return(1);
+        fprintf(stderr, "newsd: Article not posted to %s: %s.\n",
+                groupname, group.Errmsg());
+        return(1);
     }
 
     // CC MESSAGE TO MAIL ADDRESS?
     if ( group.IsCCPost() )
     {
-	string from = "Anonymous",
-	       subject = "-";
+        string from = "Anonymous",
+               subject = "-";
 
-	// HANDLE PRESERVING FIELDS FROM NNTP POSTING -> SMTP
-	string preserve;
-	int pflag = 0;
-	for ( unsigned t=0; t<head.size(); t++ )
-	{
-	    char c = head[t].c_str()[0];
+        // HANDLE PRESERVING FIELDS FROM NNTP POSTING -> SMTP
+        string preserve;
+        int pflag = 0;
+        for ( unsigned t=0; t<head.size(); t++ )
+        {
+            char c = head[t].c_str()[0];
 
-	    // CONTINUATION OF HEADER LINE?
-	    if ( c == ' ' || c == 9 )
-	    {
-		// CONTINUATION OF PREVIOUS PRESERVED HEADER LINE?
-		if ( pflag )
-		    { preserve += head[t]; preserve += "\n"; }
-		continue;
-	    }
+            // CONTINUATION OF HEADER LINE?
+            if ( c == ' ' || c == 9 )
+            {
+                // CONTINUATION OF PREVIOUS PRESERVED HEADER LINE?
+                if ( pflag )
+                    { preserve += head[t]; preserve += "\n"; }
+                continue;
+            }
 
-	    // ZERO OUT PRESERVE -- NO MORE CONTINUATIONS
-	    pflag = 0;
+            // ZERO OUT PRESERVE -- NO MORE CONTINUATIONS
+            pflag = 0;
 
-	    // CHECK FOR PRESERVE FIELDS
-	    if ( ISHEAD("From: ") ||			// must
-		 ISHEAD("Subject: ") ||			// must
-		 ISHEAD("References: ") ||		// needed to preserve threading
-		 ISHEAD("Xref: ") ||			// ?
-		 ISHEAD("Path: ") ||			// RFC 1036 2.1.6 (STR #15)
-		 ISHEAD("Content-Type: ") ||		// mime related
-		 ISHEAD("MIME-Version: ") ||		// mime related
-		 ISHEAD("Message-ID: ") )		// needed to preserve threading
-	    {
-		pflag = 1;
-		preserve += head[t];
-		preserve += "\n";
-	    }
-	}
+            // CHECK FOR PRESERVE FIELDS
+            if ( ISHEAD("From: ") ||                    // must
+                 ISHEAD("Subject: ") ||                 // must
+                 ISHEAD("References: ") ||              // needed to preserve threading
+                 ISHEAD("Xref: ") ||                    // ?
+                 ISHEAD("Path: ") ||                    // RFC 1036 2.1.6 (STR #15)
+                 ISHEAD("Content-Type: ") ||            // mime related
+                 ISHEAD("MIME-Version: ") ||            // mime related
+                 ISHEAD("Message-ID: ") )               // needed to preserve threading
+            {
+                pflag = 1;
+                preserve += head[t];
+                preserve += "\n";
+            }
+        }
 
-        G_conf.LogMessage(L_DEBUG, "popen(%s,\"w\")..", 
-	    (const char*)G_conf.SendMail());
+        G_conf.LogMessage(L_DEBUG, "popen(%s,\"w\")..",
+            (const char*)G_conf.SendMail());
 
-	FILE *fp = popen(G_conf.SendMail(), "w");
-	if ( ! fp )
-	{
-            G_conf.LogMessage(L_ERROR, 
-	        "mailgateway: ccpost popen() can't execute '%s': %s",
+        FILE *fp = popen(G_conf.SendMail(), "w");
+        if ( ! fp )
+        {
+            G_conf.LogMessage(L_ERROR,
+                "mailgateway: ccpost popen() can't execute '%s': %s",
                 (const char*)G_conf.SendMail(),
                 (const char*)strerror(errno));
-	}
-	else
-	{
-	    fprintf(fp, "To: %s\n", (const char*)group.VoidEmail());
-	    fprintf(fp, "Bcc: %s\n", (const char*)group.CCPost());
-	    fprintf(fp, "%s", preserve.c_str());
+        }
+        else
+        {
+            fprintf(fp, "To: %s\n", (const char*)group.VoidEmail());
+            fprintf(fp, "Bcc: %s\n", (const char*)group.CCPost());
+            fprintf(fp, "%s", preserve.c_str());
 
-	    // Reply-To: Needed for mail gateway
-	    if ( group.IsReplyTo() )
-		fprintf(fp, "Reply-To: %s\n", (const char*)group.ReplyTo());
+            // Reply-To: Needed for mail gateway
+            if ( group.IsReplyTo() )
+                fprintf(fp, "Reply-To: %s\n", (const char*)group.ReplyTo());
 
-	    // Errors-To: advised so admin hears about problems, in addition
-	    //            to the real person who sent the message.
-	    //
-	    fprintf(fp, "Errors-To: %s\n", (const char*)group.Creator());
-	    fprintf(fp, "\n");
-	    fprintf(fp, "[posted to %s]\n\n", (const char*)group.Name());
-	    for (unsigned t = 0; t < body.size(); t ++ )
-		fprintf(fp, "%s\n", body[t].c_str());
-	    if (pclose(fp) < 0)
-                G_conf.LogMessage(L_ERROR, 
-		    "mailgateway: ccpost pclose() failed for '%s': %s",
+            // Errors-To: advised so admin hears about problems, in addition
+            //            to the real person who sent the message.
+            //
+            fprintf(fp, "Errors-To: %s\n", (const char*)group.Creator());
+            fprintf(fp, "\n");
+            fprintf(fp, "[posted to %s]\n\n", (const char*)group.Name());
+            for (unsigned t = 0; t < body.size(); t ++ )
+                fprintf(fp, "%s\n", body[t].c_str());
+            if (pclose(fp) < 0)
+                G_conf.LogMessage(L_ERROR,
+                    "mailgateway: ccpost pclose() failed for '%s': %s",
                     (const char*)G_conf.SendMail(),
                     (const char*)strerror(errno));
-	}
+        }
     }
-    
+
     return(0);
 }
 
@@ -403,7 +405,7 @@ int main(int argc, const char *argv[])
     signal(SIGCHLD, sigcld_handler);
     signal(SIGPIPE, SIG_IGN);
     signal(SIGALRM, SIG_IGN);
-    // umask(022);		// Let the boot script determine this
+    // umask(022);              // Let the boot script determine this
 
     Server server;
     const char *conffile = CONFIG_FILE;
@@ -412,46 +414,46 @@ int main(int argc, const char *argv[])
     int dodebug = 0,
         dofork = 1,
         dorotate = 0,
-	preservedate = 0;	// default: server rewrites date
+        preservedate = 0;       // default: server rewrites date
 
     // Scan command-line...
     for (int t = 1; t < argc; t ++)
     {
         if (!strcmp(argv[t], "-c"))
-	{
-	    if (++t >= argc)
-	    {
-	        fputs("newsd: Expected filename after \"-c\"!\n", stderr);
-		HelpAndExit();
-	    }
+        {
+            if (++t >= argc)
+            {
+                fputs("newsd: Expected filename after \"-c\"!\n", stderr);
+                HelpAndExit();
+            }
 
             conffile = argv[t];
-	}
-	else if (!strcmp(argv[t], "-d"))
-	    { dodebug = 1; dofork = 0; }
-	else if (!strcmp(argv[t], "-f"))
-	    { dofork = 0; }
-	else if (!strncmp(argv[t], "-h", 2))
-	    { HelpAndExit(); }
+        }
+        else if (!strcmp(argv[t], "-d"))
+            { dodebug = 1; dofork = 0; }
+        else if (!strcmp(argv[t], "-f"))
+            { dofork = 0; }
+        else if (!strncmp(argv[t], "-h", 2))
+            { HelpAndExit(); }
         else if (!strcmp(argv[t], "-mailgateway"))
-	{
-	    if (++t >= argc)
-	    {
-	        fputs("newsd: Expected groupname after \"-mailgateway\"!\n", stderr);
-		HelpAndExit();
-	    }
+        {
+            if (++t >= argc)
+            {
+                fputs("newsd: Expected groupname after \"-mailgateway\"!\n", stderr);
+                HelpAndExit();
+            }
 
             mailgateway = argv[t];
-	    dofork      = 0;
-	}
+            dofork      = 0;
+        }
         else if (!strcmp(argv[t], "-preserve-date"))
-	    { preservedate = 1; }
+            { preservedate = 1; }
         else if (!strcmp(argv[t], "-newgroup"))
-	    { newgroup = 1; dofork = 0; }
+            { newgroup = 1; dofork = 0; }
         else if (!strcmp(argv[t], "-rotate"))
-	    { dorotate = 1; dofork = 0; }
-	else
-	    { fprintf(stderr, "newsd: Unknown argument '%s'\n", argv[t]); HelpAndExit(); }
+            { dorotate = 1; dofork = 0; }
+        else
+            { fprintf(stderr, "newsd: Unknown argument '%s'\n", argv[t]); HelpAndExit(); }
     }
 
     // Load global config data...
@@ -460,36 +462,36 @@ int main(int argc, const char *argv[])
     if (dodebug)
     {
         G_conf.LogLevel(L_DEBUG);
-	G_conf.ErrorLog("stderr");
+        G_conf.ErrorLog("stderr");
     }
 
     // Do stuff...
     if (dorotate)
     {
-        G_conf.InitLog();	// open log (it isn't yet)
-        G_conf.LogLock();	// lock while rotating
-	G_conf.Rotate(true);	// force rotation
-	G_conf.LogUnlock();
-	exit(0);
+        G_conf.InitLog();       // open log (it isn't yet)
+        G_conf.LogLock();       // lock while rotating
+        G_conf.Rotate(true);    // force rotation
+        G_conf.LogUnlock();
+        exit(0);
     }
     else if (mailgateway)
     {
-	if (RunAs()) return(1);
+        if (RunAs()) return(1);
 
-	return(MailGateway(mailgateway, preservedate));
+        return(MailGateway(mailgateway, preservedate));
     }
     else if (newgroup)
     {
         // Make sure spool dir exists first
-	//    Do this as root, since /var/spool is root owned
-	//
-	if ( CreateSpoolDir() == -1 ) return 1;
+        //    Do this as root, since /var/spool is root owned
+        //
+        if ( CreateSpoolDir() == -1 ) return 1;
 
-	// Now become the news user..
-	if (RunAs()) return(1);
+        // Now become the news user..
+        if (RunAs()) return(1);
 
-	Group tmp;
-	return(tmp.NewGroup());
+        Group tmp;
+        return(tmp.NewGroup());
     }
 
     // Start logging...
@@ -504,12 +506,12 @@ int main(int argc, const char *argv[])
     if (server.Listen() < 0)
     {
         G_conf.LogMessage(L_ERROR, "Unable to listen for connections: %s",
-	                  server.Errmsg());
+                          server.Errmsg());
         return(1);
     }
 
     // RUN AS THE USER 'NEWS'
-    //     Now that we've opened the reserved port, 
+    //     Now that we've opened the reserved port,
     //     we no longer need to be root.
     //
     if (RunAs())
@@ -518,32 +520,32 @@ int main(int argc, const char *argv[])
     // Fork into the background...
     if (dofork)
     {
-	pid_t pid = fork();
-	switch ( pid )
-	{
-	    case -1: // ERROR
-	        G_conf.LogMessage(L_ERROR, "daemonize fork(): %s (exiting)", 
-		                  strerror(errno));
-		return(1);
+        pid_t pid = fork();
+        switch ( pid )
+        {
+            case -1: // ERROR
+                G_conf.LogMessage(L_ERROR, "daemonize fork(): %s (exiting)",
+                                  strerror(errno));
+                return(1);
 
-	    case 0:  // CHILD
-        	// "Daemonize" our application so it is no longer connected to
-		// the current terminal session...
-        	close(0);
-		open("/dev/null", O_RDONLY);
-		close(1);
-		open("/dev/null", O_WRONLY);
-		close(2);
-		open("/dev/null", O_WRONLY);
+            case 0:  // CHILD
+                // "Daemonize" our application so it is no longer connected to
+                // the current terminal session...
+                close(0);
+                open("/dev/null", O_RDONLY);
+                close(1);
+                open("/dev/null", O_WRONLY);
+                close(2);
+                open("/dev/null", O_WRONLY);
 
-	        if ( setsid() < 0 )
-		    G_conf.LogMessage(L_ERROR, "setsid() failed (ignored): %s", 
-				      strerror(errno));
-		break;
-		
-	    default: // PARENT
-		return(0);
-	}
+                if ( setsid() < 0 )
+                    G_conf.LogMessage(L_ERROR, "setsid() failed (ignored): %s",
+                                      strerror(errno));
+                break;
+
+            default: // PARENT
+                return(0);
+        }
     }
 
     // ACCEPT NEW CONNECTIONS LOOP
@@ -551,48 +553,48 @@ int main(int argc, const char *argv[])
     {
         ostringstream remote_msg;
         if (server.Accept(remote_msg) < 0)
-	{
-	    G_conf.LogMessage(L_ERROR, "Unable to accept new connection: %s",
-	                      server.Errmsg());
-	    sleep(10);
-	    continue;
+        {
+            G_conf.LogMessage(L_ERROR, "Unable to accept new connection: %s",
+                              server.Errmsg());
+            sleep(10);
+            continue;
         }
 
-	// TOO MANY CHILDREN?
-	if (G_conf.MaxClients() != 0 && G_numclients >= G_conf.MaxClients())
-	{
-	    server.Send("400 Server has too many connections open -- try again later");
-	    close(server.MsgSock());
-	    continue;
-	}
-
-	// FORK A CHILD TO HANDLE CONNECTION
-	//    News readers can keep a connection open for the entire
-	//    duration of the news reading session.
-	//
-	pid_t pid;
-	while ((pid = fork()) == -1)
-	{
-	    G_conf.LogMessage(L_ERROR, "%s", remote_msg.str().c_str());	// remote info first
-	    G_conf.LogMessage(L_ERROR, "Unable to fork handler process: %s", // fork error after
-	                      strerror(errno));
-	    sleep(10);
+        // TOO MANY CHILDREN?
+        if (G_conf.MaxClients() != 0 && G_numclients >= G_conf.MaxClients())
+        {
+            server.Send("400 Server has too many connections open -- try again later");
+            close(server.MsgSock());
+            continue;
         }
 
-	G_numclients ++;
+        // FORK A CHILD TO HANDLE CONNECTION
+        //    News readers can keep a connection open for the entire
+        //    duration of the news reading session.
+        //
+        pid_t pid;
+        while ((pid = fork()) == -1)
+        {
+            G_conf.LogMessage(L_ERROR, "%s", remote_msg.str().c_str()); // remote info first
+            G_conf.LogMessage(L_ERROR, "Unable to fork handler process: %s", // fork error after
+                              strerror(errno));
+            sleep(10);
+        }
 
-	switch (pid)
-	{
-	    case 0 :	// CHILD
-	        //G_conf.ErrorLog(G_conf.ErrorLog());				// 07/13/22: commented out - fork() already makes a copy separate from parent
-		G_conf.LogMessage(L_ERROR, "%s", remote_msg.str().c_str());	// show remote info AFTER fork(), to ensure pid of "Connection from" matches subsequent msgs
-		server.CommandLoop(overview);
-		exit(0);
+        G_numclients ++;
 
-	    default :	// PARENT
-		close(server.MsgSock());
-	        break;
-	}
+        switch (pid)
+        {
+            case 0 :    // CHILD
+                //G_conf.ErrorLog(G_conf.ErrorLog());                           // 07/13/22: commented out - fork() already makes a copy separate from parent
+                G_conf.LogMessage(L_ERROR, "%s", remote_msg.str().c_str());     // show remote info AFTER fork(), to ensure pid of "Connection from" matches subsequent msgs
+                server.CommandLoop(overview);
+                exit(0);
+
+            default :   // PARENT
+                close(server.MsgSock());
+                break;
+        }
     }
     //NOTREACHED
 }

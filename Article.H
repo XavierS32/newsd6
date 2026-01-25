@@ -1,9 +1,10 @@
+// vim: autoindent tabstop=8 shiftwidth=4 expandtab softtabstop=4
 //
 // Article.H -- Manage newsgroup articles
 // 1.00 erco@3dsite.com 12/16/02
 //
 // Copyright 2003-2004 Michael Sweet
-// Copyright 2002 Greg Ercolano
+// Copyright 2002-2024 Greg Ercolano
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -29,65 +30,65 @@
 
 class Article
 {
-    string group;		// group name
-    string filename;		// full path to the article
-    ulong  number;		// article number
-    int    valid;		// article is valid (0=invalid)
+    string group;               // group name
+    string filename;            // full path to the article
+    ulong  number;              // article number
+    int    valid;               // article is valid (0=invalid)
 
     // commonly accessed header info
-    string from;		// From: field
-    string date;		// Date: field
-    string messageid;		// Message-ID: field
-    string subject;		// Subject: field
-    string references;		// References: field
-    string xref;		// Xref: field
-    int    lines;		// Lines: field
+    string from;                // From: field
+    string date;                // Date: field
+    string messageid;           // Message-ID: field
+    string subject;             // Subject: field
+    string references;          // References: field
+    string xref;                // Xref: field
+    int    lines;               // Lines: field
 
-    string errmsg;		// error message
+    string errmsg;              // error message
 
     void _Copy(const Article& o)
     {
         group      = o.group;
         filename   = o.filename;
         number     = o.number;
-	valid      = o.valid;
+        valid      = o.valid;
         from       = o.from;
         date       = o.date;
         messageid  = o.messageid;
         subject    = o.subject;
         references = o.references;
-	xref       = o.xref;
-	lines      = o.lines;
-	errmsg     = o.errmsg;
+        xref       = o.xref;
+        lines      = o.lines;
+        errmsg     = o.errmsg;
     }
 
     int _ParseHeader(string& key, string& val);
 
 public:
 
-    Article() 
+    Article()
     {
         group      = "";
         filename   = "";
-	number     = 0; 
-	valid      = 0;
-	from       = "";
-	date       = "";
-	messageid  = "";
-	subject    = "";
-	references = "";
-	xref       = ""; 
-	lines      = 0;
-	errmsg     = "";
+        number     = 0;
+        valid      = 0;
+        from       = "";
+        date       = "";
+        messageid  = "";
+        subject    = "";
+        references = "";
+        xref       = "";
+        lines      = 0;
+        errmsg     = "";
     }
 
-    ~Article() { } 
+    ~Article() { }
 
     Article(const Article& o)
-	{ _Copy(o); }
+        { _Copy(o); }
 
     Article& operator=(const Article& o)
-	{ _Copy(o); return(*this); }
+        { _Copy(o); return(*this); }
 
     int            IsValid()    { return(valid); }
     const char    *Group()      { return(group.c_str()); }

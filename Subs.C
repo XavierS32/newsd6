@@ -1,3 +1,4 @@
+// vim: autoindent tabstop=8 shiftwidth=4 expandtab softtabstop=4
 //
 // Subs.C -- Misc subroutines
 //
@@ -38,6 +39,6 @@ void TruncateCrlf_SUBS(char *s)
 void ReplaceString_SUBS(char *s, char from, char to)
 {
      for ( ; *s; s++ )
-	 if ( *s == from ) *s = to;
+         if ( *s == from ) *s = to;
 }
 

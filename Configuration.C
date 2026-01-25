@@ -1,8 +1,9 @@
+// vim: autoindent tabstop=8 shiftwidth=4 expandtab softtabstop=4
 //
 // Configuration.C -- News configuration class
 //
 // Copyright 2003-2004 Michael Sweet
-// Copyright 2002 Greg Ercolano
+// Copyright 2002-2024 Greg Ercolano
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -23,12 +24,12 @@
 #include "everything.H"
 #include <stdarg.h>
 #include <syslog.h>
-#include <limits.h>	/* UINT_MAX */
+#include <limits.h>     /* UINT_MAX */
 
 // Initialize default configuration values...
 Configuration::Configuration()
 {
-    char name[1024];			// Hostname string
+    char name[1024];            // Hostname string
 
     // Set defaults...
     HostnameLookups(0);
@@ -40,7 +41,7 @@ Configuration::Configuration()
 
     log          = stderr;
     errorlog     = "stderr";
-    errorlog_hex = 1;		// default: on is good for fail2ban
+    errorlog_hex = 1;           // default: on is good for fail2ban
     log_ino      = 0;
 
     LogLevel(L_INFO);
@@ -57,6 +58,8 @@ Configuration::Configuration()
 
     SpoolDir(SPOOL_DIR);
 
+    PostCommand("-");
+
     Timeout(12 * 3600);
 
     User("news");
@@ -71,12 +74,12 @@ Configuration::Configuration()
 // Listen on a specific address and port...
 void Configuration::Listen(const char *l)
 {
-    char		hostname[256];	// Hostname or IP
-    char		portname[256];	// Port number or name
-    char		*ptr;		// Pointer into port
-    struct hostent	*host;		// Host address
-    struct servent	*port;		// Service data
-    long		p;		// Port number
+    char                hostname[256];  // Hostname or IP
+    char                portname[256];  // Port number or name
+    char                *ptr;           // Pointer into port
+    struct hostent      *host;          // Host address
+    struct servent      *port;          // Service data
+    long                p;              // Port number
 
     // Initialize the listen address to "nntp"...
     listen.sin_family      = AF_INET;
@@ -86,70 +89,70 @@ void Configuration::Listen(const char *l)
     // Try to grab a hostname and port number...
     switch (sscanf(l, "%255[^:]:%255s", hostname, portname))
     {
-	case 1 :
-	    // Hostname is a port number...
-	    strcpy(portname, hostname);
-	    strcpy(hostname, "*");
+        case 1 :
+            // Hostname is a port number...
+            strcpy(portname, hostname);
+            strcpy(hostname, "*");
             break;
 
-	case 2 :
+        case 2 :
             break;
 
-	default :
-	    fprintf(stderr, "news: Unable to decode address '%s'\n", l);
+        default :
+            fprintf(stderr, "news: Unable to decode address '%s'\n", l);
             return;
     }
 
     // Decode the hostname and port number as needed...
     if (hostname[0] && strcmp(hostname, "*"))
     {
-	if ((host = gethostbyname(hostname)) == NULL)
-	{
-	    fprintf(stderr,
-	        "newsd: gethostbyname(%s) failed - %s\n"
-	        "newsd: Using address 127.0.0.1 (localhost)\n",
-		hostname, hstrerror(h_errno));
-	}
-	else if (host->h_length != 4 || host->h_addrtype != AF_INET)
-	{
-	    fprintf(stderr, 
-	        "newsd: gethostbyname(%s) did not return an IPv4 address!\n"
-	        "newsd: Using address 127.0.0.1 (localhost)\n",
-		hostname);
-	}
-	else
-	    memcpy(&(listen.sin_addr), host->h_addr, 4);
+        if ((host = gethostbyname(hostname)) == NULL)
+        {
+            fprintf(stderr,
+                "newsd: gethostbyname(%s) failed - %s\n"
+                "newsd: Using address 127.0.0.1 (localhost)\n",
+                hostname, hstrerror(h_errno));
+        }
+        else if (host->h_length != 4 || host->h_addrtype != AF_INET)
+        {
+            fprintf(stderr,
+                "newsd: gethostbyname(%s) did not return an IPv4 address!\n"
+                "newsd: Using address 127.0.0.1 (localhost)\n",
+                hostname);
+        }
+        else
+            memcpy(&(listen.sin_addr), host->h_addr, 4);
     }
     else if (!strcmp(hostname, "*"))
-	listen.sin_addr.s_addr = INADDR_ANY;
+        listen.sin_addr.s_addr = INADDR_ANY;
 
     if (portname[0] != '\0')
     {
-	if (isdigit(portname[0]))
-	{
-	    p = strtol(portname, &ptr, 10);
-	    if (p <= 0 || *ptr)
-	    {
-	        fprintf(stderr, 
-		    "newsd: Bad port number '%s'\n"
-        	    "newsd: Using port 119 (nntp)\n",
-		    portname);
+        if (isdigit(portname[0]))
+        {
+            p = strtol(portname, &ptr, 10);
+            if (p <= 0 || *ptr)
+            {
+                fprintf(stderr,
+                    "newsd: Bad port number '%s'\n"
+                    "newsd: Using port 119 (nntp)\n",
+                    portname);
             }
-	    else
-		listen.sin_port = htons(p);
+            else
+                listen.sin_port = htons(p);
         }
-	else
-	{
-	    if ((port = getservbyname(portname, "tcp")) == NULL)
-	    {
-        	fprintf(stderr,
-		    "newsd: getservbyname(\"%s\", \"tcp\") failed!\n"
-		    "newsd: Using port 119 (nntp)\n",
-		    portname);
-	    }
-	    else
-        	listen.sin_port = port->s_port;
-	}
+        else
+        {
+            if ((port = getservbyname(portname, "tcp")) == NULL)
+            {
+                fprintf(stderr,
+                    "newsd: getservbyname(\"%s\", \"tcp\") failed!\n"
+                    "newsd: Using port 119 (nntp)\n",
+                    portname);
+            }
+            else
+                listen.sin_port = port->s_port;
+        }
     }
 }
 
@@ -163,32 +166,32 @@ void Configuration::Listen(int p)
     listen.sin_port        = htons(p);
 }
 
-#define BAD_VALUE()	\
-    fprintf(stderr,	\
-	    "newsd: Bad %s value '%s' on line %d of '%s'\n", \
-	    name, value, linenum, conffile)
+#define BAD_VALUE()     \
+    fprintf(stderr,     \
+            "newsd: Bad %s value '%s' on line %d of '%s'\n", \
+            name, value, linenum, conffile)
 
-#define WARN_DEPRECATED(new_name)	\
-    fprintf(stderr,			\
-	    "newsd: %s on line %d of '%s' is deprecated; use '%s' instead\n", \
-	    name, linenum, conffile, new_name)
+#define WARN_DEPRECATED(new_name)       \
+    fprintf(stderr,                     \
+            "newsd: %s on line %d of '%s' is deprecated; use '%s' instead\n", \
+            name, linenum, conffile, new_name)
 
 // Load configuration values from a file...
 void Configuration::Load(const char *conffile)
 {
-    FILE	*fp;			// Config file
-    int		linenum;		// Line number
-    char	line[1024],		// Line from config file
-		*ptr,			// Pointer into line
-		*name,			// Config directive
-		*value;			// Config value
-    long	lvalue;			// Integer value
+    FILE        *fp;                    // Config file
+    int         linenum;                // Line number
+    char        line[1024],             // Line from config file
+                *ptr,                   // Pointer into line
+                *name,                  // Config directive
+                *value;                 // Config value
+    long        lvalue;                 // Integer value
 
     if ((fp = fopen(conffile, "r")) == NULL)
     {
         fprintf(stderr,
-	    "newsd: Unable to open configuration file '%s' - %s!\n",
-	    conffile, strerror(errno));
+            "newsd: Unable to open configuration file '%s' - %s!\n",
+            conffile, strerror(errno));
         return;
     }
 
@@ -200,174 +203,178 @@ void Configuration::Load(const char *conffile)
         linenum ++;
 
         // Strip comments...
-	if ((ptr = strchr(line, '#')) != NULL)
-	    *ptr = '\0';
-
-        // Strip trailing whitespace...
-	for (ptr = line + strlen(line)-1; ptr >= line && isspace(*ptr); ptr--)
+        if ((ptr = strchr(line, '#')) != NULL)
             *ptr = '\0';
 
-	// Ignore blank lines...
-	if (!line[0])
-	    continue;
+        // Strip trailing whitespace...
+        for (ptr = line + strlen(line)-1; ptr >= line && isspace(*ptr); ptr--)
+            *ptr = '\0';
+
+        // Ignore blank lines...
+        if (!line[0])
+            continue;
 
         // Find directive name...
-	for (name = line; isspace(*name); name ++);
+        for (name = line; isspace(*name); name ++);
 
         // Separate directive from value...
-	for (value = name + 1; !isspace(*value) && *value; value ++);
+        for (value = name + 1; !isspace(*value) && *value; value ++);
 
-	while (isspace(*value))
-	    *value++ = '\0';
+        while (isspace(*value))
+            *value++ = '\0';
 
-	if (!*value)
-	{
-	    fprintf(stderr, "newsd: %s missing value on line %d of '%s'\n", 
-	        name, linenum, conffile);
-	    continue;
-	}
+        if (!*value)
+        {
+            fprintf(stderr, "newsd: %s missing value on line %d of '%s'\n",
+                name, linenum, conffile);
+            continue;
+        }
 
         // Decode configuration directive...
-	if (!strcasecmp(name, "HostnameLookups"))
-	{
-	    if (!strcasecmp(value, "off") || !strcasecmp(value, "no"))
-	    {
-	        HostnameLookups(0);
-	    }
-	    else if (!strcasecmp(value, "on") || !strcasecmp(value, "yes"))
-	    {
-	        HostnameLookups(1);
-	    }
-	    else if (!strcasecmp(value, "double"))
-	    {
-	        HostnameLookups(2);
-	    }
-	    else
-	        BAD_VALUE();
-	}
-	else if (!strcasecmp(name, "NoRecurseMsgDir"))
-	{
-	         if (!strcasecmp(value, "off") || !strcasecmp(value, "no")) norecurse_msgdir = 0;
-	    else if (!strcasecmp(value, "on") || !strcasecmp(value, "yes")) norecurse_msgdir = 1;
+        if (!strcasecmp(name, "HostnameLookups"))
+        {
+            if (!strcasecmp(value, "off") || !strcasecmp(value, "no"))
+            {
+                HostnameLookups(0);
+            }
+            else if (!strcasecmp(value, "on") || !strcasecmp(value, "yes"))
+            {
+                HostnameLookups(1);
+            }
+            else if (!strcasecmp(value, "double"))
+            {
+                HostnameLookups(2);
+            }
+            else
+                BAD_VALUE();
+        }
+        else if (!strcasecmp(name, "NoRecurseMsgDir"))
+        {
+                 if (!strcasecmp(value, "off") || !strcasecmp(value, "no")) norecurse_msgdir = 0;
+            else if (!strcasecmp(value, "on") || !strcasecmp(value, "yes")) norecurse_msgdir = 1;
             else BAD_VALUE();
-	}
-	else if (!strcasecmp(name, "MsgModDirs"))
-	{
-	         if (!strcasecmp(value, "off") || !strcasecmp(value, "no")) msgmod_dirs = 0;
-	    else if (!strcasecmp(value, "on") || !strcasecmp(value, "yes")) msgmod_dirs = 1;
+        }
+        else if (!strcasecmp(name, "MsgModDirs"))
+        {
+                 if (!strcasecmp(value, "off") || !strcasecmp(value, "no")) msgmod_dirs = 0;
+            else if (!strcasecmp(value, "on") || !strcasecmp(value, "yes")) msgmod_dirs = 1;
             else BAD_VALUE();
-	}
-	else if (!strcasecmp(name, "Listen"))
-	{
-	    Listen(value);
-	}
-	else if (!strcasecmp(name, "LogFile"))
-	{
-	    WARN_DEPRECATED("ErrorLog");
-	    ErrorLog(value);
-	}
-	else if (!strcasecmp(name, "ErrorLog"))
-	{
-	    ErrorLog(value);
-	}
-	else if (!strcasecmp(name, "ErrorLog.Hex"))
-	{
-	         if (!strcasecmp(value, "off") || !strcasecmp(value, "no"))  ErrorLog_Hex(0);
-	    else if (!strcasecmp(value, "on")  || !strcasecmp(value, "yes")) ErrorLog_Hex(1);
+        }
+        else if (!strcasecmp(name, "Listen"))
+        {
+            Listen(value);
+        }
+        else if (!strcasecmp(name, "LogFile"))
+        {
+            WARN_DEPRECATED("ErrorLog");
+            ErrorLog(value);
+        }
+        else if (!strcasecmp(name, "ErrorLog"))
+        {
+            ErrorLog(value);
+        }
+        else if (!strcasecmp(name, "ErrorLog.Hex"))
+        {
+                 if (!strcasecmp(value, "off") || !strcasecmp(value, "no"))  ErrorLog_Hex(0);
+            else if (!strcasecmp(value, "on")  || !strcasecmp(value, "yes")) ErrorLog_Hex(1);
             else BAD_VALUE();
-	}
-	else if (!strcasecmp(name, "LogLevel"))
-	{
-	    if (!strcasecmp(value, "error"))
-	        LogLevel(L_ERROR);
-	    else if (!strcasecmp(value, "info"))
-	        LogLevel(L_INFO);
-	    else if (!strcasecmp(value, "debug"))
-	        LogLevel(L_DEBUG);
-	    else
-	        BAD_VALUE();
-	}
-	else if (!strcasecmp(name, "MaxClients"))
-	{
-	    lvalue = strtol(value, &ptr, 10);
+        }
+        else if (!strcasecmp(name, "LogLevel"))
+        {
+            if (!strcasecmp(value, "error"))
+                LogLevel(L_ERROR);
+            else if (!strcasecmp(value, "info"))
+                LogLevel(L_INFO);
+            else if (!strcasecmp(value, "debug"))
+                LogLevel(L_DEBUG);
+            else
+                BAD_VALUE();
+        }
+        else if (!strcasecmp(name, "MaxClients"))
+        {
+            lvalue = strtol(value, &ptr, 10);
 
-	    if (lvalue < 0 || *ptr)
-	        BAD_VALUE();
-	    else
-	        MaxClients(lvalue);
-	}
-	else if (!strcasecmp(name, "MaxLogSize"))
-	{
-	    MaxLogSize(value);
-	}
-	else if (!strcasecmp(name, "NewsHostname"))
-	{
-	    WARN_DEPRECATED("ErrorLog");
-	    ServerName(value);
-	}
-	else if (!strcasecmp(name, "ServerName"))
-	{
-	    ServerName(value);
-	}
-	else if (!strcasecmp(name, "SendMail"))
-	{
-	    SendMail(value);
-	}
-	else if (!strcasecmp(name, "SpamFilter"))
-	{
-	    SpamFilter(value);
-	}
-	else if (!strcasecmp(name, "SpoolDir"))
-	{
-	    SpoolDir(value);
-	}
-	else if (!strcasecmp(name, "Timeout"))
-	{
-	    lvalue = strtol(value, &ptr, 10);
+            if (lvalue < 0 || *ptr)
+                BAD_VALUE();
+            else
+                MaxClients(lvalue);
+        }
+        else if (!strcasecmp(name, "MaxLogSize"))
+        {
+            MaxLogSize(value);
+        }
+        else if (!strcasecmp(name, "NewsHostname"))
+        {
+            WARN_DEPRECATED("ErrorLog");
+            ServerName(value);
+        }
+        else if (!strcasecmp(name, "ServerName"))
+        {
+            ServerName(value);
+        }
+        else if (!strcasecmp(name, "SendMail"))
+        {
+            SendMail(value);
+        }
+        else if (!strcasecmp(name, "SpamFilter"))
+        {
+            SpamFilter(value);
+        }
+        else if (!strcasecmp(name, "SpoolDir"))
+        {
+            SpoolDir(value);
+        }
+        else if (!strcasecmp(name, "PostCommand"))
+        {
+            PostCommand(value);
+        }
+        else if (!strcasecmp(name, "Timeout"))
+        {
+            lvalue = strtol(value, &ptr, 10);
 
-	    if (lvalue < 0 || *ptr)
-	        BAD_VALUE();
-	    else
-	        Timeout(lvalue);
-	}
-	else if (!strcasecmp(name, "User"))
-	{
-	    User(value);
+            if (lvalue < 0 || *ptr)
+                BAD_VALUE();
+            else
+                Timeout(lvalue);
+        }
+        else if (!strcasecmp(name, "User"))
+        {
+            User(value);
             if (bad_user)
-	        BAD_VALUE();
-	}
-	else if (!strcasecmp(name, "Auth.User"))
-	{
-	    auth_user  = value;
-	    auth_flags = ( auth_user == "-" ) ? AUTH_NOAUTH : AUTH_FAIL;
-	}
-	else if (!strcasecmp(name, "Auth.Pass"))
-	{
-	    auth_pass  = value;
-	    auth_flags = ( auth_pass == "-" ) ? AUTH_NOAUTH : AUTH_FAIL;
-	}
-	else if (!strcasecmp(name, "Auth.Protect"))
-	{
-	         if (!strcasecmp(value, "post")) auth_protect = AUTH_POST;
-	    else if (!strcasecmp(value, "read")) auth_protect = AUTH_READ;
-	    else if (!strcasecmp(value, "all" )) auth_protect = AUTH_POST | AUTH_READ;
-	    else if (!strcasecmp(value, "-"   )) auth_protect = 0;
-	    else BAD_VALUE();
-	}
-	else if (!strcasecmp(name, "Auth.Sleep"))
-	{
-	    unsigned lval;
-	    if ( sscanf(value, "%u", &lval) == 1 )
-	        auth_sleep = lval;
-	    else
-	        BAD_VALUE();
-	}
-	else
-	{
-	    fprintf(stderr, 
-	        "newsd: Unknown config file command '%s' on line %d of '%s'\n",
-		line, linenum, conffile);
-	}
+                BAD_VALUE();
+        }
+        else if (!strcasecmp(name, "Auth.User"))
+        {
+            auth_user  = value;
+            auth_flags = ( auth_user == "-" ) ? AUTH_NOAUTH : AUTH_FAIL;
+        }
+        else if (!strcasecmp(name, "Auth.Pass"))
+        {
+            auth_pass  = value;
+            auth_flags = ( auth_pass == "-" ) ? AUTH_NOAUTH : AUTH_FAIL;
+        }
+        else if (!strcasecmp(name, "Auth.Protect"))
+        {
+                 if (!strcasecmp(value, "post")) auth_protect = AUTH_POST;
+            else if (!strcasecmp(value, "read")) auth_protect = AUTH_READ;
+            else if (!strcasecmp(value, "all" )) auth_protect = AUTH_POST | AUTH_READ;
+            else if (!strcasecmp(value, "-"   )) auth_protect = 0;
+            else BAD_VALUE();
+        }
+        else if (!strcasecmp(name, "Auth.Sleep"))
+        {
+            unsigned lval;
+            if ( sscanf(value, "%u", &lval) == 1 )
+                auth_sleep = lval;
+            else
+                BAD_VALUE();
+        }
+        else
+        {
+            fprintf(stderr,
+                "newsd: Unknown config file command '%s' on line %d of '%s'\n",
+                line, linenum, conffile);
+        }
     }
 
     // Close the config file and return...
@@ -390,23 +397,23 @@ void Configuration::FixNewsLogDir(const char* newslogdir)
     if ( stat(newslogdir, &logdir_stat) == 0 )
     {
         // Stat ok, is the newslogdir a file instead of a directory?
-	if ( ! S_ISDIR(logdir_stat.st_mode) )
-	{
-	    // Rename away old news file, then create dir
-	    //    Rename /var/log/news -> /var/log/news.old
-	    //
-	    string oldfile; 
-	    oldfile = newslogdir;
-	    oldfile += ".old";
-	    if ( rename(newslogdir, oldfile.c_str()) < 0 )
-	    {
-		fprintf(stderr,
-		    "newsd: Can't rename away old news file to make log dir:\n"
-		    "newsd: rename(%s,%s): %s\n", 
-		    newslogdir, oldfile.c_str(), strerror(errno));
-	    }
-	    domkdir = 1;
-	}
+        if ( ! S_ISDIR(logdir_stat.st_mode) )
+        {
+            // Rename away old news file, then create dir
+            //    Rename /var/log/news -> /var/log/news.old
+            //
+            string oldfile;
+            oldfile = newslogdir;
+            oldfile += ".old";
+            if ( rename(newslogdir, oldfile.c_str()) < 0 )
+            {
+                fprintf(stderr,
+                    "newsd: Can't rename away old news file to make log dir:\n"
+                    "newsd: rename(%s,%s): %s\n",
+                    newslogdir, oldfile.c_str(), strerror(errno));
+            }
+            domkdir = 1;
+        }
     }
     else
         // Stat failed? Dir does not exist
@@ -416,34 +423,34 @@ void Configuration::FixNewsLogDir(const char* newslogdir)
     if ( domkdir )
     {
         // Logdir does not exist? Create it
-	if ( mkdir(newslogdir, 0755) )
-	    fprintf(stderr, "newsd: mkdir(%s): %s\n",
-	        newslogdir, strerror(errno));
+        if ( mkdir(newslogdir, 0755) )
+            fprintf(stderr, "newsd: mkdir(%s): %s\n",
+                newslogdir, strerror(errno));
 
-	// Redo stat to get perms etc.
-	if ( stat(newslogdir, &logdir_stat) < 0 )
-	{
-	    statok = 0;
-	    fprintf(stderr, "newsd: stat(%s): %s\n", 
-	        newslogdir, strerror(errno));
-	}
+        // Redo stat to get perms etc.
+        if ( stat(newslogdir, &logdir_stat) < 0 )
+        {
+            statok = 0;
+            fprintf(stderr, "newsd: stat(%s): %s\n",
+                newslogdir, strerror(errno));
+        }
     }
 
     // Now check perms on newslogdir
     if ( statok )
     {
-	// Dir owned by "news" user?
-	if ( UID() != logdir_stat.st_uid || GID() != logdir_stat.st_gid )
-	{
-	    // No? change it
-	    if ( chown(newslogdir, UID(), GID()) < 0 )
-	    {
-		fprintf(stderr,
-		    "newsd: Can't change perms on log directory '%s': "
-		    "chown(%s,%lu,%lu) failed: %s\n",
-		    newslogdir, newslogdir, (ulong)UID(), (ulong)GID(), strerror(errno));
-	    }
-	}
+        // Dir owned by "news" user?
+        if ( UID() != logdir_stat.st_uid || GID() != logdir_stat.st_gid )
+        {
+            // No? change it
+            if ( chown(newslogdir, UID(), GID()) < 0 )
+            {
+                fprintf(stderr,
+                    "newsd: Can't change perms on log directory '%s': "
+                    "chown(%s,%lu,%lu) failed: %s\n",
+                    newslogdir, newslogdir, (ulong)UID(), (ulong)GID(), strerror(errno));
+            }
+        }
     }
 }
 
@@ -454,7 +461,7 @@ void Configuration::InitLog()
     {
         if (log != stderr)
             fclose(log);
-	log = 0;
+        log = 0;
     }
 
     if (errorlog == "syslog")
@@ -465,12 +472,12 @@ void Configuration::InitLog()
     {
         log = popen(errorlog.c_str() + 1, "w");
 
-	if (!log)
-	{
-	    fprintf(stderr, "newsd: Unable to open log pipe to \"%s\" - %s.\n",
-	            errorlog.c_str() + 1, strerror(errno));
+        if (!log)
+        {
+            fprintf(stderr, "newsd: Unable to open log pipe to \"%s\" - %s.\n",
+                    errorlog.c_str() + 1, strerror(errno));
             log = stderr;
-	}
+        }
     }
     else
         OpenLogAppend();
@@ -488,33 +495,33 @@ int Configuration::OpenLogAppend()
 {
     // Non-logfile? skip
     if ( errorlog == "stderr" || errorlog == "syslog" ||
-         errorlog.c_str()[0] == '|' ) 
+         errorlog.c_str()[0] == '|' )
         return(0);
 
     // Close log (if open)
     if ( log )
     {
         if (log != stderr)
-            fclose(log);		// (also clears Lock()s, if any)
-	log = 0;
+            fclose(log);                // (also clears Lock()s, if any)
+        log = 0;
     }
 
     // Open log for append, do NOT apply locks
     log = fopen(errorlog.c_str(), "a");
     if ( !log )
     {
-	fprintf(stderr, "newsd: Unable to open log file \"%s\": %s.\n",
-		errorlog.c_str(), strerror(errno));
-	log = stderr;
-	return(-1);
+        fprintf(stderr, "newsd: Unable to open log file \"%s\": %s.\n",
+                errorlog.c_str(), strerror(errno));
+        log = stderr;
+        return(-1);
     }
 
     setbuf(log, NULL);
 
     // Save inode# for log rotation checks
     {
-	struct stat buf;
-	log_ino = ( fstat(fileno(log), &buf) == 0 ) ? buf.st_ino : 0;
+        struct stat buf;
+        log_ino = ( fstat(fileno(log), &buf) == 0 ) ? buf.st_ino : 0;
     }
 
     // This will fail when running as non-root, so don't bother checking
@@ -535,8 +542,8 @@ int Configuration::LogLock()
     if ( flock(fileno(log), LOCK_EX) < 0 )
     {
         fprintf(stderr, "newsd: LogLock(): flock(LOCK_EX): %s",
-	    strerror(errno));
-	return(-1);
+            strerror(errno));
+        return(-1);
     }
 
     return(0);
@@ -552,8 +559,8 @@ int Configuration::LogUnlock()
     if ( flock(fileno(log), LOCK_UN) < 0 )
     {
         fprintf(stderr, "newsd: LogUnlock(): flock(LOCK_UN): %s",
-	    strerror(errno));
-	return(-1);
+            strerror(errno));
+        return(-1);
     }
 
     return(0);
@@ -571,14 +578,14 @@ string Configuration::OldLogFilename()
 //
 void Configuration::DateStampedMessage(FILE *fp, const char *msg)
 {
-    time_t    secs;		// Current UNIX time
-    struct tm *date;		// Current date/time
-    char      datestr[1024];	// Date/time string
+    time_t    secs;             // Current UNIX time
+    struct tm *date;            // Current date/time
+    char      datestr[1024];    // Date/time string
 
     time(&secs);
     date = localtime(&secs);
     strftime(datestr, sizeof(datestr), "%c", date);
-    fprintf(fp, "%s newsd[%d]: %s%s", 
+    fprintf(fp, "%s newsd[%d]: %s%s",
             datestr, getpid(), msg,
             (msg[strlen(msg)-1] != '\n') ? "\n" : "");
     fflush(fp);
@@ -588,7 +595,7 @@ void Configuration::DateStampedMessage(FILE *fp, const char *msg)
 //    Assumes Lock() already applied.
 //    On return, Lock() will be applied to new log.
 //
-//    force: 
+//    force:
 //           true  = force log to be rotated (regardless of size)
 //           false = rotate only if logsize > maxlogsize
 //
@@ -605,21 +612,21 @@ int Configuration::Rotate(bool force)
     // Check size of log
     if ( ! force && maxlogsize > 0)
     {
-	struct stat buf;
-	if ( stat(errorlog.c_str(), &buf) < 0 )
-	{
-	    string msg = "Log file size check failed: stat(" +
-	                 errorlog + "): " + strerror(errno);
-	    DateStampedMessage(log, msg.c_str());
-	    return(-1);
-	}
+        struct stat buf;
+        if ( stat(errorlog.c_str(), &buf) < 0 )
+        {
+            string msg = "Log file size check failed: stat(" +
+                         errorlog + "): " + strerror(errno);
+            DateStampedMessage(log, msg.c_str());
+            return(-1);
+        }
 
-	// fprintf(stderr, "LOG SIZE CHECK: %lu <= %lu\n",  //DEBUG
-	//     (ulong)buf.st_size, (ulong)maxlogsize);	    //DEBUG
+        // fprintf(stderr, "LOG SIZE CHECK: %lu <= %lu\n",  //DEBUG
+        //     (ulong)buf.st_size, (ulong)maxlogsize);      //DEBUG
 
         // Log too small? ignore
-	if ( buf.st_size <= maxlogsize )
-	    { return(0); }
+        if ( buf.st_size <= maxlogsize )
+            { return(0); }
     }
 
     // Rotate log (lock will follow renamed log)
@@ -627,18 +634,18 @@ int Configuration::Rotate(bool force)
     if ( rename(errorlog.c_str(), oerrorlog.c_str()) < 0 )
     {
         string msg = "Log file rotation failed: rename(" +
-	             errorlog + "," + oerrorlog + "): " + strerror(errno);
+                     errorlog + "," + oerrorlog + "): " + strerror(errno);
 
-	// Include uid/euid info, incase error is permission related
-	{
+        // Include uid/euid info, incase error is permission related
+        {
             char junk[256];
-	    snprintf(junk, sizeof(junk), " (uid=%lu euid=%lu)",
-	        (ulong)getuid(), (ulong)geteuid());
-	    msg += junk;
-	}
+            snprintf(junk, sizeof(junk), " (uid=%lu euid=%lu)",
+                (ulong)getuid(), (ulong)geteuid());
+            msg += junk;
+        }
 
-	DateStampedMessage(log, msg.c_str());
-	return(-1);
+        DateStampedMessage(log, msg.c_str());
+        return(-1);
     }
 
     // Indicate log rotated in old log
@@ -674,9 +681,9 @@ bool Configuration::WasLogRotated()
     struct stat buf;
     if ( stat(errorlog.c_str(), &buf) < 0 )
     {
-        fprintf(stderr, "newsd: stat(%s): %s\n", 
-	    errorlog.c_str(), strerror(errno));
-	return(false);
+        fprintf(stderr, "newsd: stat(%s): %s\n",
+            errorlog.c_str(), strerror(errno));
+        return(false);
     }
 
     return(buf.st_ino != log_ino);
@@ -690,8 +697,8 @@ void Configuration::LogMessage(int l, const char *m, ...)
         return;
 
     // Format the message...
-    va_list      ap;			// Argument list pointer
-    char         buffer[1024];		// Message buffer
+    va_list      ap;                    // Argument list pointer
+    char         buffer[1024];          // Message buffer
 
     va_start(ap, m);
     vsnprintf(buffer, sizeof(buffer), m, ap);
@@ -701,22 +708,22 @@ void Configuration::LogMessage(int l, const char *m, ...)
     if (log)
     {
         LogLock();
-	{
-	    // Was log recently rotated? Reopen to write to correct log
-	    if ( WasLogRotated() )
-		{ OpenLogAppend(); LogLock(); }
+        {
+            // Was log recently rotated? Reopen to write to correct log
+            if ( WasLogRotated() )
+                { OpenLogAppend(); LogLock(); }
 
-	    // Automatic log rotation?
-	    if ( maxlogsize > 0 )
-	        Rotate(false);			// Handle log rotations
+            // Automatic log rotation?
+            if ( maxlogsize > 0 )
+                Rotate(false);                  // Handle log rotations
 
-	    DateStampedMessage(log, buffer);	// Log message
-	}
+            DateStampedMessage(log, buffer);    // Log message
+        }
         LogUnlock();
     }
     else
         syslog(loglevel == L_ERROR ? LOG_ERR :
-	           loglevel == L_INFO ? LOG_INFO : LOG_DEBUG, "%s", buffer);
+                   loglevel == L_INFO ? LOG_INFO : LOG_DEBUG, "%s", buffer);
 }
 
 void Configuration::LogSelf(int loglevel)
@@ -724,52 +731,53 @@ void Configuration::LogSelf(int loglevel)
     LogMessage(loglevel, "ErrorLog %s", ErrorLog());
     LogMessage(loglevel, "HostnameLookups %s",
                       HostnameLookups() == 0 ? "off" :
-	                  HostnameLookups() == 1 ? "on" : " double");
+                          HostnameLookups() == 1 ? "on" : " double");
     struct sockaddr_in *addr = Listen();
     unsigned ipaddr = ntohl(addr->sin_addr.s_addr);
     LogMessage(loglevel, "Listen %u.%u.%u.%u:%d",
-        	      (ipaddr >> 24) & 255, (ipaddr >> 16) & 255,
-		      (ipaddr >> 8) & 255, ipaddr & 255,
-		      ntohs(addr->sin_port));
+                      (ipaddr >> 24) & 255, (ipaddr >> 16) & 255,
+                      (ipaddr >> 8) & 255, ipaddr & 255,
+                      ntohs(addr->sin_port));
     LogMessage(loglevel, "LogLevel %s",
-        	      LogLevel() == L_ERROR ? "error" :
-	        	  LogLevel() == L_INFO ? "info" : "debug");
+                      LogLevel() == L_ERROR ? "error" :
+                          LogLevel() == L_INFO ? "info" : "debug");
     LogMessage(loglevel, "MaxClients %u", MaxClients());
     LogMessage(loglevel, "MaxLogSize %ld", MaxLogSize());
     LogMessage(loglevel, "SendMail %s", SendMail());
     LogMessage(loglevel, "ServerName %s", ServerName());
     LogMessage(loglevel, "SpamFilter %s", SpamFilter());
     LogMessage(loglevel, "SpoolDir %s", SpoolDir());
+    LogMessage(loglevel, "PostCommand %s", PostCommand());
     LogMessage(loglevel, "Timeout %u", Timeout());
     LogMessage(loglevel, "User %s", User());
 }
 
 void Configuration::MaxLogSize(const char *val)
 {
-    double	number;			// Number
-    char	units[255];		// Units
+    double      number;                 // Number
+    char        units[255];             // Units
 
     switch (sscanf(val, "%lf%254s", &number, units))
     {
         default :
-	    fprintf(stderr, "newsd: Bad MaxLogSize value \"%s\"!\n", val);
-	    maxlogsize = 0;
-	    break;
+            fprintf(stderr, "newsd: Bad MaxLogSize value \"%s\"!\n", val);
+            maxlogsize = 0;
+            break;
 
         case 1 :
-	    maxlogsize = (long)number;
-	    break;
+            maxlogsize = (long)number;
+            break;
 
-	case 2 :
-	    if (!strcasecmp(units, "k"))
-	        maxlogsize = (long)(number * 1024.0);
-	    else if (!strcasecmp(units, "m"))
-	        maxlogsize = (long)(number * 1024.0 * 1024.0);
-	    else if (!strcasecmp(units, "g"))
-	        maxlogsize = (long)(number * 1024.0 * 1024.0 * 1024.0);
-	    else
-	        maxlogsize = (long)number;
-	    break;
+        case 2 :
+            if (!strcasecmp(units, "k"))
+                maxlogsize = (long)(number * 1024.0);
+            else if (!strcasecmp(units, "m"))
+                maxlogsize = (long)(number * 1024.0 * 1024.0);
+            else if (!strcasecmp(units, "g"))
+                maxlogsize = (long)(number * 1024.0 * 1024.0 * 1024.0);
+            else
+                maxlogsize = (long)number;
+            break;
     }
 }
 
@@ -780,8 +788,8 @@ int Configuration::lookup_user(const char *name)
     if (pw == NULL )
     {
         uid      = UINT_MAX;
-	gid      = UINT_MAX;
-	bad_user = true;
+        gid      = UINT_MAX;
+        bad_user = true;
         return(-1);
     }
 
@@ -801,11 +809,11 @@ int Configuration::AuthLogin(const string& user, const string& pass)
 {
     // SUCCESS
     if ( auth_user == user && auth_pass == pass )
-	{ auth_flags = auth_protect; return(1); }
-	
+        { auth_flags = auth_protect; return(1); }
+
     // FAILURE
     if ( auth_sleep > 0 )
-	sleep(auth_sleep);
+        sleep(auth_sleep);
     auth_flags = AUTH_FAIL;
 
     return(-1);

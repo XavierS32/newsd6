@@ -2,7 +2,7 @@
 // Server.H -- News Server Class
 //
 // Copyright 2003-2004 Michael Sweet
-// Copyright 2002 Greg Ercolano
+// Copyright 2002-2024 Greg Ercolano
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -29,13 +29,13 @@
 class Server
 {
     // Server-specific data...
-    int sock,		// listener socket (accept())
-        msgsock;	// transaction socket (read/write)
-    char *buf;		// line buffer (internal)
+    int sock,           // listener socket (accept())
+        msgsock;        // transaction socket (read/write)
+    char *buf;          // line buffer (internal)
     struct sockaddr_in sin;
 
-    Group group;	// current group
-    Article article;	// current article
+    Group group;        // current group
+    Article article;    // current article
     string errmsg;
 
 public:
@@ -43,24 +43,24 @@ public:
     Server()
     {
         sock = msgsock = -1;
-	buf = (char*)malloc(LINE_LEN);
+        buf = (char*)malloc(LINE_LEN);
     }
 
     ~Server()
     {
         if ( msgsock != -1 )
-	    { close(msgsock); msgsock = -1; }
+            { close(msgsock); msgsock = -1; }
         if ( sock != -1 )
-	    { close(sock); sock = -1; }
-	if ( buf )
-	    { free(buf); buf = 0; }
+            { close(sock); sock = -1; }
+        if ( buf )
+            { free(buf); buf = 0; }
     }
 
     const char *Errmsg() { return(errmsg.c_str()); }
     int MsgSock() { return(msgsock); }
     int Sock() { return(sock); }
     const char *GetRemoteIPStr()
-	{ return(inet_ntoa(sin.sin_addr)); }
+        { return(inet_ntoa(sin.sin_addr)); }
 
     int Send(const char *msg);
     int IsAllowed(int op);

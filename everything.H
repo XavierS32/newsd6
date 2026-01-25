@@ -2,7 +2,7 @@
 // everything.H -- everything in the way of macros and includes
 //
 // Copyright 2003-2004 Michael Sweet
-// Copyright 2002 Greg Ercolano
+// Copyright 2002-2024 Greg Ercolano
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -47,7 +47,7 @@
 #include <algorithm>
 #include <sstream>
 #include "VERSION.H"
-using namespace std;	// for clang, must appear after std #include's 
+using namespace std;	// for clang, must appear after std #include's
 
 #if defined(__APPLE__) && defined(__clang__)
  // Apple + clang doesn't have these

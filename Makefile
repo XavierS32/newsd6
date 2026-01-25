@@ -63,7 +63,7 @@ install: newsd man html
 	cp newsd  $(BIN_DIR)/newsd
 	chmod 755 $(BIN_DIR)/newsd
 	@if [ ! -e $(CONFIG_FILE) ]; then \
-	    @echo Installing new $(CONFIG_FILE); \
+	    echo Installing new $(CONFIG_FILE); \
 	    cat newsd.conf | sed 's%^ErrorLog.*%ErrorLog $(LOG_DIR)/newsd.log%' | \
 	                     sed 's%^SendMail.*%SendMail $(SENDMAIL) -t%'       | \
 	                     sed 's%^SpoolDir.*%SpoolDir $(SPOOL_DIR)%'         | \

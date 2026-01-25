@@ -1,8 +1,9 @@
+// vim: autoindent tabstop=8 shiftwidth=4 expandtab softtabstop=4
 //
 // Group.C -- Manage newsgroup groups
 //
 // Copyright 2003-2004 Michael Sweet
-// Copyright 2002 Greg Ercolano
+// Copyright 2002-2024 Greg Ercolano
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -54,25 +55,25 @@ int Group::SaveInfo(int dolock)
     int ilock = -1;
     if ( dolock ) { if ( (ilock = WriteLock()) == -1 ) return -1; }
     {
-	FILE *fp = fopen(path.c_str(), "w");
-	if ( fp == NULL )
-	{
-	    errmsg = path;
-	    errmsg += ": ";
-	    errmsg += strerror(errno);
-	    G_conf.LogMessage(L_ERROR, "Group::SaveInfo(): %s", errmsg.c_str());
-	    if ( dolock ) Unlock(ilock);
-	    return(-1);
-	}
+        FILE *fp = fopen(path.c_str(), "w");
+        if ( fp == NULL )
+        {
+            errmsg = path;
+            errmsg += ": ";
+            errmsg += strerror(errno);
+            G_conf.LogMessage(L_ERROR, "Group::SaveInfo(): %s", errmsg.c_str());
+            if ( dolock ) Unlock(ilock);
+            return(-1);
+        }
 
-	string crlf = "\n";
-	WriteString(fp, string("start       ") + ultos_SUBS(start) + crlf);
-	WriteString(fp, string("end         ") + ultos_SUBS(end)   + crlf);
-	WriteString(fp, string("total       ") + ultos_SUBS(total) + crlf);
+        string crlf = "\n";
+        WriteString(fp, string("start       ") + ultos_SUBS(start) + crlf);
+        WriteString(fp, string("end         ") + ultos_SUBS(end)   + crlf);
+        WriteString(fp, string("total       ") + ultos_SUBS(total) + crlf);
 
-	fflush(fp);
-	fsync(fileno(fp));
-	fclose(fp);
+        fflush(fp);
+        fsync(fileno(fp));
+        fclose(fp);
     }
     if ( dolock ) { Unlock(ilock); }
     return(0);
@@ -184,8 +185,8 @@ int Group::LoadInfo(int dolock)
     FILE *fp = fopen(path.c_str(), "r");
     if ( fp == NULL )
     {
-	// NO INFO FILE? BUILD ONE
-	if ( errno == ENOENT )
+        // NO INFO FILE? BUILD ONE
+        if ( errno == ENOENT )
         {
             // Only build if its a valid group (has a .config file)
             if ( ! IsValidGroup() )
@@ -198,31 +199,31 @@ int Group::LoadInfo(int dolock)
             return(BuildInfo(dolock));
         }
 
-	errmsg = path;
-	errmsg += ": ";
-	errmsg += strerror(errno);
-	G_conf.LogMessage(L_ERROR, "Group::LoadInfo(): %s", errmsg.c_str());
-	return(-1);
+        errmsg = path;
+        errmsg += ": ";
+        errmsg += strerror(errno);
+        G_conf.LogMessage(L_ERROR, "Group::LoadInfo(): %s", errmsg.c_str());
+        return(-1);
     }
 
     int ilock = -1;
     if ( dolock ) { if ( (ilock = ReadLock()) == -1 ) return -1; }
     {
-	char buf[LINE_LEN];
-	while ( fgets(buf, sizeof(buf), fp) )
-	{
-	    // REMOVE TRAILING \n
-	    TruncateCrlf_SUBS(buf);
+        char buf[LINE_LEN];
+        while ( fgets(buf, sizeof(buf), fp) )
+        {
+            // REMOVE TRAILING \n
+            TruncateCrlf_SUBS(buf);
 
-	    // SKIP BLANK LINES AND COMMENTS
-	    if ( buf[0] == '#' || buf[0] == 0 ) continue;
+            // SKIP BLANK LINES AND COMMENTS
+            if ( buf[0] == '#' || buf[0] == 0 ) continue;
 
-	    // PARSE COMMANDS
-	    if ( sscanf(buf, "start %lu", &start) == 1 ) { continue; }
-	    if ( sscanf(buf, "end %lu",   &end  ) == 1 ) { continue; }
-	    if ( sscanf(buf, "total %lu", &total) == 1 ) { continue; }
-	}
-	fclose(fp);
+            // PARSE COMMANDS
+            if ( sscanf(buf, "start %lu", &start) == 1 ) { continue; }
+            if ( sscanf(buf, "end %lu",   &end  ) == 1 ) { continue; }
+            if ( sscanf(buf, "total %lu", &total) == 1 ) { continue; }
+        }
+        fclose(fp);
     }
     if ( dolock ) { Unlock(ilock); }
     return(0);
@@ -240,59 +241,59 @@ int Group::LoadConfig(int dolock)
     FILE *fp = fopen(path.c_str(), "r");
     if ( fp == NULL )
     {
-	errmsg = path;
-	errmsg += ": ";
-	errmsg += strerror(errno);
-	G_conf.LogMessage(L_ERROR, "Group::LoadConfig(): %s", errmsg.c_str());
-	return(-1);
+        errmsg = path;
+        errmsg += ": ";
+        errmsg += strerror(errno);
+        G_conf.LogMessage(L_ERROR, "Group::LoadConfig(): %s", errmsg.c_str());
+        return(-1);
     }
 
     int ilock = -1;
     if ( dolock ) { if ( (ilock = ReadLock()) == -1 ) return -1; }
     {
-	char buf[LINE_LEN];
-	char arg[256];
-	ccpost = "";
-	while ( fgets(buf, sizeof(buf), fp) )
-	{
-	    // REMOVE TRAILING \n
-	    TruncateCrlf_SUBS(buf);
+        char buf[LINE_LEN];
+        char arg[256];
+        ccpost = "";
+        while ( fgets(buf, sizeof(buf), fp) )
+        {
+            // REMOVE TRAILING \n
+            TruncateCrlf_SUBS(buf);
 
-	    // SKIP BLANK LINES AND COMMENTS
-	    if ( buf[0] == '#' || buf[0] == 0 ) continue;
+            // SKIP BLANK LINES AND COMMENTS
+            if ( buf[0] == '#' || buf[0] == 0 ) continue;
 
-	    // PARSE COMMANDS
-	    if ( strncmp(buf, "description ", strlen("description ")) == 0 )
-	    {
-	        const char *p = buf + strlen("description ");
-		while ( *p && isspace(*p & 255) ) p++;  // skip leading white
-		desc = p;
-		continue;
-	    }
-	    if ( sscanf(buf, "creator %255s", arg) == 1 )
-		{ creator = arg; continue; }
-	    if ( sscanf(buf, "postok %d", &postok) == 1 )
-		{ continue; }
-	    if ( sscanf(buf, "postlimit %d", &postlimit) == 1 )
-		{ continue; }
-	    if ( sscanf(buf, "ccpost %255s", arg) == 1 )
-	    { 
-		// Add trailing comma if none
-		if ( ccpost != "" && ccpost != "-" )
-		{
-		    const char *end = ccpost.c_str() + ccpost.length() - 1;
-		    if ( *end != ',' )
-			{ ccpost += ","; }
-		}
-		ccpost += arg;
-		continue;
-	    }
-	    if ( sscanf(buf, "replyto %255s", arg) == 1 )
-		{ replyto = arg; continue; }
-	    if ( sscanf(buf, "voidemail %255s", arg) == 1 )
-		{ voidemail = arg; continue; }
-	}
-	fclose(fp);
+            // PARSE COMMANDS
+            if ( strncmp(buf, "description ", strlen("description ")) == 0 )
+            {
+                const char *p = buf + strlen("description ");
+                while ( *p && isspace(*p & 255) ) p++;  // skip leading white
+                desc = p;
+                continue;
+            }
+            if ( sscanf(buf, "creator %255s", arg) == 1 )
+                { creator = arg; continue; }
+            if ( sscanf(buf, "postok %d", &postok) == 1 )
+                { continue; }
+            if ( sscanf(buf, "postlimit %d", &postlimit) == 1 )
+                { continue; }
+            if ( sscanf(buf, "ccpost %255s", arg) == 1 )
+            {
+                // Add trailing comma if none
+                if ( ccpost != "" && ccpost != "-" )
+                {
+                    const char *end = ccpost.c_str() + ccpost.length() - 1;
+                    if ( *end != ',' )
+                        { ccpost += ","; }
+                }
+                ccpost += arg;
+                continue;
+            }
+            if ( sscanf(buf, "replyto %255s", arg) == 1 )
+                { replyto = arg; continue; }
+            if ( sscanf(buf, "voidemail %255s", arg) == 1 )
+                { voidemail = arg; continue; }
+        }
+        fclose(fp);
     }
     if ( dolock ) { Unlock(ilock); }
 
@@ -315,28 +316,28 @@ int Group::SaveConfig()
     // WRITE OUT CONFIG FILE
     int ilock = WriteLock();
     {
-	FILE *fp = fopen(path.c_str(), "w");
-	if ( fp == NULL )
-	{
-	    errmsg = path;
-	    errmsg += ": ";
-	    errmsg += strerror(errno);
-	    Unlock(ilock);
-	    return(-1);
-	}
+        FILE *fp = fopen(path.c_str(), "w");
+        if ( fp == NULL )
+        {
+            errmsg = path;
+            errmsg += ": ";
+            errmsg += strerror(errno);
+            Unlock(ilock);
+            return(-1);
+        }
 
-	string crlf = "\n";
-	WriteString(fp, string("description ") + desc      + crlf);
-	WriteString(fp, string("creator     ") + creator   + crlf);
-	WriteString(fp, string("postok      ") + ultos_SUBS((ulong)postok)    + crlf);
-	WriteString(fp, string("postlimit   ") + ultos_SUBS((ulong)postlimit) + crlf);
-	WriteString(fp, string("ccpost      ") + ccpost    + crlf);
-	WriteString(fp, string("replyto     ") + replyto   + crlf);
-	WriteString(fp, string("voidemail   ") + voidemail + crlf);
+        string crlf = "\n";
+        WriteString(fp, string("description ") + desc      + crlf);
+        WriteString(fp, string("creator     ") + creator   + crlf);
+        WriteString(fp, string("postok      ") + ultos_SUBS((ulong)postok)    + crlf);
+        WriteString(fp, string("postlimit   ") + ultos_SUBS((ulong)postlimit) + crlf);
+        WriteString(fp, string("ccpost      ") + ccpost    + crlf);
+        WriteString(fp, string("replyto     ") + replyto   + crlf);
+        WriteString(fp, string("voidemail   ") + voidemail + crlf);
 
-	fflush(fp);
-	fsync(fileno(fp));
-	fclose(fp);
+        fflush(fp);
+        fsync(fileno(fp));
+        fclose(fp);
     }
     Unlock(ilock);
     return(0);
@@ -348,7 +349,7 @@ int Group::SaveConfig()
 //
 int Group::LoadInfo(const char *group_name, int dolock)
 {
-    valid = 0;			// assume failed until success
+    valid = 0;                  // assume failed until success
 
     if ( strlen(group_name) >= GROUP_MAX )
          { errmsg = "Group name too long"; return(-1); }
@@ -356,12 +357,12 @@ int Group::LoadInfo(const char *group_name, int dolock)
     struct stat sbuf;
     if ( stat(Dirname(), &sbuf) < 0 )
     {
-	errmsg = "invalid group name '";
-	errmsg += group_name;
-	errmsg += "': ";
-	errmsg += strerror(errno);
-	G_conf.LogMessage(L_ERROR, "Group::LoadInfo(): %s", errmsg.c_str());
-	return(-1);
+        errmsg = "invalid group name '";
+        errmsg += group_name;
+        errmsg += "': ";
+        errmsg += strerror(errno);
+        G_conf.LogMessage(L_ERROR, "Group::LoadInfo(): %s", errmsg.c_str());
+        return(-1);
     }
 
     // GET CREATION TIME FROM DIR'S DATESTAMP
@@ -372,11 +373,11 @@ int Group::LoadInfo(const char *group_name, int dolock)
     //
     name = group_name;
     if ( LoadInfo(dolock) < 0 )
-	{ return(-1); }
+        { return(-1); }
 
     // LOAD CONFIG FILE
     if ( LoadConfig(dolock) < 0 )
-	{ return(-1); }
+        { return(-1); }
 
     // GROUP IS NOW VALID
     valid = 1;
@@ -391,8 +392,8 @@ int Group::WriteString(FILE *fp, const char *buf)
     if ( fwrite(buf, 1, len, fp) != len)
     {
         errmsg = "write error";
-	G_conf.LogMessage(L_ERROR, "Group::WriteString(): %s", errmsg.c_str());
-	return(-1);
+        G_conf.LogMessage(L_ERROR, "Group::WriteString(): %s", errmsg.c_str());
+        return(-1);
     }
     return(0);
 }
@@ -403,8 +404,8 @@ int Group::WriteString(FILE *fp, const string& buf)
     if ( fwrite(buf.c_str(), 1, buf.size(), fp) != buf.size())
     {
         errmsg = "write error";
-	G_conf.LogMessage(L_ERROR, "Group::WriteString(): %s", errmsg.c_str());
-	return(-1);
+        G_conf.LogMessage(L_ERROR, "Group::WriteString(): %s", errmsg.c_str());
+        return(-1);
     }
     return(0);
 }
@@ -427,22 +428,22 @@ int Group::GetMessageID(ulong artnum, string& msgid)
     char line[1024];
     if ((fp = fopen(apath.c_str(), "r")) != NULL)
     {
-	// Parse article until Message-ID: field found, or until EOH
-	while (fgets(line, sizeof(line), fp) != NULL)
-	{
-	    // REMOVE TRAILING \n
-	    TruncateCrlf_SUBS(line);
-	    if ( line[0] == 0 ) { ret = -1; break; }         // EOH? not found..
-	    if ( strncasecmp(line, "Message-ID:", 11) == 0)  // Message-ID: <xyz>?
-	    {
-		char *s = line + 11;	                     // " <xyz>"
-		while ( *s && isspace(*s & 255)) s++;        // "<xyz>"
-		msgid = s;			             // "<xyz>"
-		ret = 0;                                     // success
-		break;
-	    }
-	}
-	fclose(fp);
+        // Parse article until Message-ID: field found, or until EOH
+        while (fgets(line, sizeof(line), fp) != NULL)
+        {
+            // REMOVE TRAILING \n
+            TruncateCrlf_SUBS(line);
+            if ( line[0] == 0 ) { ret = -1; break; }         // EOH? not found..
+            if ( strncasecmp(line, "Message-ID:", 11) == 0)  // Message-ID: <xyz>?
+            {
+                char *s = line + 11;                         // " <xyz>"
+                while ( *s && isspace(*s & 255)) s++;        // "<xyz>"
+                msgid = s;                                   // "<xyz>"
+                ret = 0;                                     // success
+                break;
+            }
+        }
+        fclose(fp);
     }
     return ret;
 }
@@ -466,16 +467,16 @@ int Group::FindArticleByMessageID(const char *ccp_msgid, ulong &number)
     for (ulong artnum = End(); artnum >= Start(); artnum-- )
     {
         ++count;
-	if ( GetMessageID(artnum, art_msgid) == 0 )     // found msgid value?
-	{
-	    if ( art_msgid == msgid )	                // matches search?
-	    {
-		G_conf.LogMessage(L_INFO, "Message-ID '%s' found after searching "
-		                          "%ld articles", msgid.c_str(), count);
-	        number = artnum;	// save article#, done
-		return 0;
-	    }
-	}
+        if ( GetMessageID(artnum, art_msgid) == 0 )     // found msgid value?
+        {
+            if ( art_msgid == msgid )                   // matches search?
+            {
+                G_conf.LogMessage(L_INFO, "Message-ID '%s' found after searching "
+                                          "%ld articles", msgid.c_str(), count);
+                number = artnum;        // save article#, done
+                return 0;
+            }
+        }
     }
 
     // Return an error if not found..
@@ -494,19 +495,19 @@ int Group::ReadLock()
     if ( fd < 0 )
     {
         errmsg = lockpath;
-	errmsg += ": ";
-	errmsg += strerror(errno);
-	G_conf.LogMessage(L_ERROR, "Group::ReadLock(): %s", errmsg.c_str());
-	return(-1);
+        errmsg += ": ";
+        errmsg += strerror(errno);
+        G_conf.LogMessage(L_ERROR, "Group::ReadLock(): %s", errmsg.c_str());
+        return(-1);
     }
     if ( flock(fd, LOCK_SH) < 0 )
     {
         errmsg = "flock(";
-	errmsg += lockpath;
-	errmsg += ", SHARED): ";
-	errmsg += strerror(errno);
-	G_conf.LogMessage(L_ERROR, "Group::ReadLock(): %s", errmsg.c_str());
-	return(-1);
+        errmsg += lockpath;
+        errmsg += ", SHARED): ";
+        errmsg += strerror(errno);
+        G_conf.LogMessage(L_ERROR, "Group::ReadLock(): %s", errmsg.c_str());
+        return(-1);
     }
     return(fd);
 }
@@ -520,19 +521,19 @@ int Group::WriteLock()
     if ( fd < 0 )
     {
         errmsg = lockpath;
-	errmsg += ": ";
-	errmsg += strerror(errno);
-	G_conf.LogMessage(L_ERROR, "Group::WriteLock(): %s", errmsg.c_str());
-	return(-1);
+        errmsg += ": ";
+        errmsg += strerror(errno);
+        G_conf.LogMessage(L_ERROR, "Group::WriteLock(): %s", errmsg.c_str());
+        return(-1);
     }
     if ( flock(fd, LOCK_EX) < 0 )
     {
         errmsg = "flock(";
-	errmsg += lockpath;
-	errmsg += ", EXCLUSIVE): ";
-	errmsg += strerror(errno);
-	G_conf.LogMessage(L_ERROR, "Group::WriteLock(): %s", errmsg.c_str());
-	return(-1);
+        errmsg += lockpath;
+        errmsg += ", EXCLUSIVE): ";
+        errmsg += strerror(errno);
+        G_conf.LogMessage(L_ERROR, "Group::WriteLock(): %s", errmsg.c_str());
+        return(-1);
     }
     return(fd);
 }
@@ -541,7 +542,7 @@ int Group::WriteLock()
 void Group::Unlock(int fd)
 {
     if ( fd > 0 )
-	{ flock(fd, LOCK_UN); close(fd); }
+        { flock(fd, LOCK_UN); close(fd); }
 }
 
 // REORDER AN ARTICLE'S HEADER
@@ -557,14 +558,14 @@ void Group::ReorderHeader(const char*overview[], vector<string>& head)
     for ( int t=0; overview[t]; t++ )
     {
         for ( unsigned int r=0; r<head.size(); r++ )
-	{
-	    if (strncmp(overview[t], head[r].c_str(), strlen(overview[t])) == 0)
-	    {
-	        newhead.push_back(head[r]);
-		head.erase(head.begin() + r);
-		break;
-	    }
-	}
+        {
+            if (strncmp(overview[t], head[r].c_str(), strlen(overview[t])) == 0)
+            {
+                newhead.push_back(head[r]);
+                head.erase(head.begin() + r);
+                break;
+            }
+        }
     }
     // APPEND THE REST
     for ( unsigned int r=0; r<head.size(); r++ )
@@ -589,7 +590,7 @@ const char *Group::DateRFC822()
     time_t lt = time(NULL);
     struct tm *tm = localtime(&lt);
     const char *wday[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-    const char *mon[]  = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+    const char *mon[]  = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
     // spec: Wdy, DD Mon YY HH:MM:SS TZ   (where TZ is a GMT offset "<+/->HHMM")
@@ -598,246 +599,263 @@ const char *Group::DateRFC822()
     //
     char gmtoff_sign = (tm->tm_gmtoff<0) ? '-' : '+';
     long gmtoff_abs  = (tm->tm_gmtoff<0) ? -(tm->tm_gmtoff) : (tm->tm_gmtoff);
-    int  gmtoff_hour = gmtoff_abs / 3600;	// secs -> hours
-    int  gmtoff_min  = (gmtoff_abs / 60) % 60;	// secs -> mins
+    int  gmtoff_hour = gmtoff_abs / 3600;       // secs -> hours
+    int  gmtoff_min  = (gmtoff_abs / 60) % 60;  // secs -> mins
     sprintf(datebuf, "%.3s, %02d %.3s %d %02d:%02d:%02d %c%02d%02d",
-	(const char*)wday[tm->tm_wday],
-	(int)tm->tm_mday,
-	(const char*)mon[tm->tm_mon],
-	(int)tm->tm_year + 1900,// 4 digit date instead of 2 digit (mozilla)
-	(int)tm->tm_hour,
-	(int)tm->tm_min,
-	(int)tm->tm_sec,
-	(char)gmtoff_sign,
-	(int)gmtoff_hour,
-	(int)gmtoff_min);
+        (const char*)wday[tm->tm_wday],
+        (int)tm->tm_mday,
+        (const char*)mon[tm->tm_mon],
+        (int)tm->tm_year + 1900,// 4 digit date instead of 2 digit (mozilla)
+        (int)tm->tm_hour,
+        (int)tm->tm_min,
+        (int)tm->tm_sec,
+        (char)gmtoff_sign,
+        (int)gmtoff_hour,
+        (int)gmtoff_min);
     return(datebuf);
 }
 
 // POST ARTICLE
-int Group::Post(const char *overview[], 
-		vector<string> &head,
-		vector<string> &body,
-		const char *remoteip_str,
-		bool force_post,
-		bool preservedate)		// 0=rewrite date, true=preserve original date
+int Group::Post(const char *overview[],
+                vector<string> &head,
+                vector<string> &body,
+                const char *remoteip_str,
+                bool force_post,
+                bool preservedate)              // 0=rewrite date, true=preserve original date
 {
     string postgroup;
     if ( GetHeaderValue(head, "Newsgroups:", postgroup) == -1 )
-	{ errmsg = "article has no 'Newsgroups' field"; return(-1); }
+        { errmsg = "article has no 'Newsgroups' field"; return(-1); }
 
     // LOCK FOR POSTING
     Name(postgroup);
     int plock; if ( (plock = WriteLock()) == -1 ) return -1;
     {
-	// LOAD INFO FOR THIS GROUP
-	if ( LoadInfo(postgroup, 0) < 0 )
-	    { errmsg = "no such group"; Unlock(plock); return(-1); }
+        // LOAD INFO FOR THIS GROUP
+        if ( LoadInfo(postgroup, 0) < 0 )
+            { errmsg = "no such group"; Unlock(plock); return(-1); }
 
-	if ( postok == 0 && !force_post)
-	{
-	    errmsg = "posting disabled for group '";
-	    errmsg += postgroup;
-	    errmsg += "'";
-	    G_conf.LogMessage(L_ERROR, "Group::Post(): %s", errmsg.c_str());
+        if ( postok == 0 && !force_post)
+        {
+            errmsg = "posting disabled for group '";
+            errmsg += postgroup;
+            errmsg += "'";
+            G_conf.LogMessage(L_ERROR, "Group::Post(): %s", errmsg.c_str());
 
-	    Unlock(plock);
-	    return(-1);
-	}
+            Unlock(plock);
+            return(-1);
+        }
 
         if (*G_conf.SpamFilter())
-	{
-	    // Run spam filter to see if this is spam before we post...
-	    FILE	*p;		// Pipe stream
-	    int		status;		// Exit status
-	    char	command[1024];	// Command to run
+        {
+            // Run spam filter to see if this is spam before we post...
+            FILE        *p;             // Pipe stream
+            int         status;         // Exit status
+            char        command[1024];  // Command to run
 
             snprintf(command, sizeof(command), "%s >/dev/null 2>/dev/null",
-	             G_conf.SpamFilter());
+                     G_conf.SpamFilter());
 
             if ((p = popen(command, "w")) == NULL)
-	    {
-	        errmsg = "spam filter command failed to execute";
-		Unlock(plock);
-		return(-1);
-	    }
+            {
+                errmsg = "spam filter command failed to execute";
+                Unlock(plock);
+                return(-1);
+            }
 
             // Send the message to the filter...
-	    for ( unsigned int t=0; t<head.size(); t++ )
-		fprintf(p, "%s\n", head[t].c_str());
+            for ( unsigned int t=0; t<head.size(); t++ )
+                fprintf(p, "%s\n", head[t].c_str());
 
-	    fputs("\n", p);
+            fputs("\n", p);
 
-	    for ( unsigned int t=0; t<body.size(); t++ )
-		fprintf(p, "%s\n", body[t].c_str());
+            for ( unsigned int t=0; t<body.size(); t++ )
+                fprintf(p, "%s\n", body[t].c_str());
 
             // Close the pipe to the command and get the exit status...
-	    status = pclose(p);
+            status = pclose(p);
 
-	    if (status)
-	    {
-	        errmsg = "spam filter rejected message";
-		Unlock(plock);
-		return(-1);
-	    }
-	}
-
-	// OPEN NEW ARTICLE
-	ulong msgnum = 0;
-	int fd;
-	bool dateflag = 0;
-	for ( msgnum=End() + 1; 1; msgnum++ )
-	{
-            // Build path to article
-	    string path;
-
-            // Using modulus dirs?
-            if ( G_conf.MsgModDirs() ) 
+            if (status)
             {
-                path = Dirname();                         // "/path/fltk/general"
-                path += "/";                              // "/path/fltk/general/"
-                path += ultos_SUBS((msgnum/1000)*1000);   // "/path/fltk/general/1000"
+                errmsg = "spam filter rejected message";
+                Unlock(plock);
+                return(-1);
+            }
+        }
+
+        // OPEN NEW ARTICLE
+        string msgpath;         // path to article
+        ulong msgnum = 0;
+        ulong msg1000 = 0;
+        int fd;
+        bool dateflag = 0;
+        for ( msgnum=End() + 1; 1; msgnum++ )
+        {
+            // Build path to article
+            if ( G_conf.MsgModDirs() )
+            {
+                // Using modulus dirs?
+                msg1000 = (msgnum/1000)*1000;
+                msgpath = Dirname();                      // "/path/fltk/general"
+                msgpath += "/";                           // "/path/fltk/general/"
+                msgpath += ultos_SUBS(msg1000);           // "/path/fltk/general/1000"
 
                 // See if modulus directory exists -- if not, create
                 struct stat sbuf;
-                if ( stat(path.c_str(), &sbuf) < 0 )
+                if ( stat(msgpath.c_str(), &sbuf) < 0 )
                 {
-                    if ( mkdir(path.c_str(), 0777) )
+                    if ( mkdir(msgpath.c_str(), 0777) )
                     {
                         errmsg = "can't create modulus dir: mkdir(";
-                        errmsg += path;
+                        errmsg += msgpath;
                         errmsg += ",0777): ";
                         errmsg += strerror(errno);
                         G_conf.LogMessage(L_ERROR, "Group::Post(): ",
-			                  errmsg.c_str());
+                                          errmsg.c_str());
                         Unlock(plock);
                         return(-1);
                     }
                 }
                 else if (!S_ISDIR(sbuf.st_mode))
                 {
-                    errmsg = path;
+                    errmsg = msgpath;
                     errmsg += " is not a directory (expected a modulus dir)";
                     G_conf.LogMessage(L_ERROR, "Group::Post(): ", errmsg.c_str());
 
                     Unlock(plock);
                     return(-1);
                 }
-                path += "/";                // "/path/fltk/general/1000/"
-                path += ultos_SUBS(msgnum); // "/path/fltk/general/1000/1999"
+                msgpath += "/";                // "/path/fltk/general/1000/"
+                msgpath += ultos_SUBS(msgnum); // "/path/fltk/general/1000/1999"
             }
             else
             {
-                path = Dirname();           // "/path/fltk/general"
-                path += "/";                // "/path/fltk/general/"
-                path += ultos_SUBS(msgnum); // "/path/fltk/general/1999"
+                msgpath = Dirname();           // "/path/fltk/general"
+                msgpath += "/";                // "/path/fltk/general/"
+                msgpath += ultos_SUBS(msgnum); // "/path/fltk/general/1999"
             }
 
-	    if ((fd = open(path.c_str(), O_CREAT|O_EXCL|O_WRONLY, 0666)) == -1)
-	    {
-		if ( errno == EEXIST )
-		    { continue; }		// try next article number
+            if ((fd = open(msgpath.c_str(), O_CREAT|O_EXCL|O_WRONLY, 0666)) == -1)
+            {
+                if ( errno == EEXIST )
+                    { continue; }               // try next article number
 
-		errmsg = path;
-		errmsg += ": ";
-		errmsg += strerror(errno);
-		G_conf.LogMessage(L_ERROR, "Group::Post(): ", errmsg.c_str());
+                errmsg = msgpath;
+                errmsg += ": ";
+                errmsg += strerror(errno);
+                G_conf.LogMessage(L_ERROR, "Group::Post(): ", errmsg.c_str());
 
-		Unlock(plock);
-		return(-1);
-	    }
-	    break;
-	}
-
-	// STRIP UNWANTED INFO FROM HEADER
-	// HEADER NAMES ARE CASE INSENSITIVE: INTERNET DRAFT (Son of RFC1036)
-	{
-	    int index;
-
-	    // Date?
-	    if ( ( index = GetHeaderIndex(head, "Date:") ) != -1 )
-	    {
-		dateflag = true;				// found original date
-		if ( ! preservedate )				// rewrite date? (not preserving)
-		    // Remove Date: (if any)
-		    { head.erase( head.begin() + index); }	// remove
-	    }
-	    // Remove NNTP-Posting-Host: (if any)
-	    if ( ( index = GetHeaderIndex(head, "NNTP-Posting-Host:") ) != -1 )
-	        { head.erase( head.begin() + index); }
-	}
-
-	// HEADERS ADDED BY NEWS SERVER
-	{
-	    ostringstream os;
-	    os << "Xref: " << G_conf.ServerName()
-	       << " " << postgroup << ":" << msgnum;
-	    head.push_back(os.str());
-	}
-	if ( ! preservedate || ! dateflag )
-	{
-	    ostringstream os;
-	    os << "Date: " << DateRFC822();
-	    head.push_back(os.str());		// add date if not preserving or no Date was found
-	}
-	{
-	    ostringstream os;
-	    os << "NNTP-Posting-Host: " << remoteip_str;
-	    head.push_back(os.str());
-	}
-
-        // Only set Message-ID: if client /didn't/ specify it
-	string value;
-	if ( GetHeaderValue(head, "Message-ID:", value) == -1 )
-        {
-	    ostringstream os;
-	    os << "Message-ID: <" << msgnum << "-" << postgroup
-	       << "@" << G_conf.ServerName() << ">";
-	    head.push_back(os.str());
+                Unlock(plock);
+                return(-1);
+            }
+            break;
         }
 
-        // Only set Lines: if client /didn't/ specify it
-	if ( GetHeaderValue(head, "Lines:", value) == -1 )
+        // STRIP UNWANTED INFO FROM HEADER
+        // HEADER NAMES ARE CASE INSENSITIVE: INTERNET DRAFT (Son of RFC1036)
         {
-	    ostringstream os;
-	    os << "Lines: " << body.size();
+            int index;
+
+            // Date?
+            if ( ( index = GetHeaderIndex(head, "Date:") ) != -1 )
+            {
+                dateflag = true;                                // found original date
+                if ( ! preservedate )                           // rewrite date? (not preserving)
+                    // Remove Date: (if any)
+                    { head.erase( head.begin() + index); }      // remove
+            }
+            // Remove NNTP-Posting-Host: (if any)
+            if ( ( index = GetHeaderIndex(head, "NNTP-Posting-Host:") ) != -1 )
+                { head.erase( head.begin() + index); }
+        }
+
+        // HEADERS ADDED BY NEWS SERVER
+        {
+            ostringstream os;
+            os << "Xref: " << G_conf.ServerName()
+               << " " << postgroup << ":" << msgnum;
+            head.push_back(os.str());
+        }
+        if ( ! preservedate || ! dateflag )
+        {
+            ostringstream os;
+            os << "Date: " << DateRFC822();
+            head.push_back(os.str());           // add date if not preserving or no Date was found
+        }
+        {
+            ostringstream os;
+            os << "NNTP-Posting-Host: " << remoteip_str;
             head.push_back(os.str());
         }
 
-	// DONT DO THIS -- MESSES UP MULTILINE FIELDS
-	// ReorderHeader(overview, head);
+        // Only set Message-ID: if client /didn't/ specify it
+        string value;
+        if ( GetHeaderValue(head, "Message-ID:", value) == -1 )
+        {
+            ostringstream os;
+            os << "Message-ID: <" << msgnum << "-" << postgroup
+               << "@" << G_conf.ServerName() << ">";
+            head.push_back(os.str());
+        }
 
-	// WRITE HEADER
-	for ( unsigned int t=0; t<head.size(); t++ )
-	{
-	    write(fd, head[t].c_str(), head[t].length());
-	    write(fd, "\n", 1);
-	}
+        // Only set Lines: if client /didn't/ specify it
+        if ( GetHeaderValue(head, "Lines:", value) == -1 )
+        {
+            ostringstream os;
+            os << "Lines: " << body.size();
+            head.push_back(os.str());
+        }
 
-	// WRITE SEPARATOR
-	write(fd, "\n", 1);
+        // DONT DO THIS -- MESSES UP MULTILINE FIELDS
+        // ReorderHeader(overview, head);
 
-	// WRITE BODY
-	for ( unsigned int t=0; t<body.size(); t++ )
-	{
-	    write(fd, body[t].c_str(), body[t].length());
-	    write(fd, "\n", 1);
-	}
+        // WRITE HEADER
+        for ( unsigned int t=0; t<head.size(); t++ )
+        {
+            write(fd, head[t].c_str(), head[t].length());
+            write(fd, "\n", 1);
+        }
 
-	// FIRST MSG? START AT 1
-	if ( Total() == 0 && Start() == 0 )
-	    Start(1);
+        // WRITE SEPARATOR
+        write(fd, "\n", 1);
 
-	// THIS IS NEW HIGHEST ARTICLE
-	End(msgnum);
-	Total(Total()+1);
+        // WRITE BODY
+        for ( unsigned int t=0; t<body.size(); t++ )
+        {
+            write(fd, body[t].c_str(), body[t].length());
+            write(fd, "\n", 1);
+        }
 
-	// Update .info file
-	if ( SaveInfo(0) < 0 )
-	{
-	    Unlock(plock);
-	    return(-1);
-	}
+        // FIRST MSG? START AT 1
+        if ( Total() == 0 && Start() == 0 )
+            Start(1);
+
+        // THIS IS NEW HIGHEST ARTICLE
+        End(msgnum);
+        Total(Total()+1);
+
+        // Update .info file
+        if ( SaveInfo(0) < 0 )
+        {
+            Unlock(plock);
+            return(-1);
+        }
+
+        // Handle PostCommand, if any
+        if ( strcmp(G_conf.PostCommand(), "-") != 0 &&
+             strcmp(G_conf.PostCommand(), "" ) != 0 )
+        {
+            ostringstream cmd;
+            cmd << G_conf.PostCommand() << " "
+                << postgroup            << " "  // e.g. "fltk.general"
+                << msgnum               << " "  // e.g. 12037
+                << msgpath;                     // e.g. "/some/path/spool/fltk/general/10000/12037"
+            G_conf.LogMessage(L_DEBUG, "Executing: %s", cmd.str().c_str());
+            if ( system(cmd.str().c_str()) == 0 )
+                { G_conf.LogMessage(L_DEBUG, "OK: EXITCODE 0"); }
+            else
+                { G_conf.LogMessage(L_DEBUG, "FAILED: Non-zero exit code"); }
+        }
     }
     Unlock(plock);
     return(0);
@@ -859,11 +877,11 @@ int Group::NewGroup()
     struct stat buf;
     if ( stat(Dirname(), &buf) < 0 )
     {
-	// NEWSGROUP DIR DOESNT EXIST, CREATE IT
+        // NEWSGROUP DIR DOESNT EXIST, CREATE IT
         string cmd = "/bin/mkdir -m 0755 -p ";
-	cmd += Dirname();
-	G_conf.LogMessage(L_DEBUG, "Executing: %s", cmd.c_str());
-	if ( system(cmd.c_str()) ) { return(1); }
+        cmd += Dirname();
+        G_conf.LogMessage(L_DEBUG, "Executing: %s", cmd.c_str());
+        if ( system(cmd.c_str()) ) { return(1); }
         G_conf.LogMessage(L_ERROR, "OK");
     }
 
@@ -874,7 +892,7 @@ int Group::NewGroup()
     if ( postok )
     {
         fprintf(stderr,
-	    "\nMaximum #lines for postings, '0' if no max (default=1000):\n");
+            "\nMaximum #lines for postings, '0' if no max (default=1000):\n");
         if ( fgets(in, sizeof(in)-1, stdin) == NULL ) return(1);
         if ( sscanf(in, "%d", &i) != 1 ) i = 1000;
         postlimit = i;
@@ -883,42 +901,42 @@ int Group::NewGroup()
         { postlimit = 0; }
 
     fprintf(stderr, "\nDescription of newsgroup in one short line, '-' if none "
-		    "(eg. 'Discussion of TTL electronics'):\n");
+                    "(eg. 'Discussion of TTL electronics'):\n");
     if ( fgets(in, sizeof(in)-1, stdin) == NULL ) return(1);
     in[strlen(in)-1] = 0;
     desc = in;
 
     fprintf(stderr, "\nAdministrator's email address for group, '-' if none "
-		    "(default='-'):\n");
+                    "(default='-'):\n");
     if ( fgets(in, sizeof(in)-1, stdin) == NULL ) return(1);
     if ( sscanf(in, "%255s", s) != 1 ) strcpy(s, "-");
     creator = s;
 
     fprintf(stderr, "\nBCC all postings to these email address(es), "
-		    "'-' if none (default='-')\n");
+                    "'-' if none (default='-')\n");
     if ( fgets(in, sizeof(in)-1, stdin) == NULL ) return(1);
     if ( sscanf(in, "%255s", s) != 1 ) strcpy(s, "-");
     ccpost = s;
 
     if ( ccpost != "-" )
     {
-	fprintf(stderr,
-	    "\nReply-To address for all emails, '-' if none (default='-')\n");
-	if ( fgets(in, sizeof(in)-1, stdin) == NULL ) return(1);
-	if ( sscanf(in, "%255s", s) != 1 ) strcpy(s, "-");
-	replyto = s;
+        fprintf(stderr,
+            "\nReply-To address for all emails, '-' if none (default='-')\n");
+        if ( fgets(in, sizeof(in)-1, stdin) == NULL ) return(1);
+        if ( sscanf(in, "%255s", s) != 1 ) strcpy(s, "-");
+        replyto = s;
 
-	fprintf(stderr,
-	    "\nVoid email address, 'root' if none (default='root')\n");
-	if ( fgets(in, sizeof(in)-1, stdin) == NULL ) return(1);
-	if ( sscanf(in, "%255s", s) != 1 ) strcpy(s, "root");
-	voidemail = s;
+        fprintf(stderr,
+            "\nVoid email address, 'root' if none (default='root')\n");
+        if ( fgets(in, sizeof(in)-1, stdin) == NULL ) return(1);
+        if ( sscanf(in, "%255s", s) != 1 ) strcpy(s, "root");
+        voidemail = s;
     }
 
     if ( SaveConfig() < 0 )
     {
-	G_conf.LogMessage(L_ERROR, "ERROR: %s", Errmsg());
-	return(1);
+        G_conf.LogMessage(L_ERROR, "ERROR: %s", Errmsg());
+        return(1);
     }
 
     // CREATE AN INFO FILE, SO IT SHOWS UP IN 'LIST'
@@ -927,23 +945,23 @@ int Group::NewGroup()
     //
     if ( BuildInfo(1) < 0 )
     {
-	G_conf.LogMessage(L_ERROR, "ERROR: %s", Errmsg());
-	return(1);
+        G_conf.LogMessage(L_ERROR, "ERROR: %s", Errmsg());
+        return(1);
     }
 
     fprintf(stderr, "\n"
-		    "----------\n"
-		    "--- OK ---\n"
-		    "----------\n"
-		    "\n"
-		    "    o New group %s was created.\n"
-		    "\n"
-		    "    o Use your news reader to post some test messages.\n"
-		    "\n"
-		    "    o You can edit %s/.config later\n"
-		    "      to make changes.\n",
-	    (const char*)Name(),
-	    (const char*)Dirname());
+                    "----------\n"
+                    "--- OK ---\n"
+                    "----------\n"
+                    "\n"
+                    "    o New group %s was created.\n"
+                    "\n"
+                    "    o Use your news reader to post some test messages.\n"
+                    "\n"
+                    "    o You can edit %s/.config later\n"
+                    "      to make changes.\n",
+            (const char*)Name(),
+            (const char*)Dirname());
 
     return(0);
 }
@@ -997,7 +1015,7 @@ int Group::ParseArticle(string &msg, vector<string>&head, vector<string>&body)
             case '\r': ++ss; continue;     // ignore \r's
             case '\n':
                 // Complete line? append, reset
-                if ( headflag ) { head.push_back(line); }	// append
+                if ( headflag ) { head.push_back(line); }       // append
                 else            { body.push_back(line); }
                 line = "";
 
@@ -1016,7 +1034,7 @@ int Group::ParseArticle(string &msg, vector<string>&head, vector<string>&body)
                 continue;
             default:
                 line += *ss;
-		++ss;
+                ++ss;
                 continue;
         }
     }
@@ -1025,11 +1043,11 @@ int Group::ParseArticle(string &msg, vector<string>&head, vector<string>&body)
     {
         uint t;
         for (t=0; t<head.size(); t++)
-            { G_conf.LogMessage(L_DEBUG, "ParseArticle: --- head[%03d]: '%s'\n", 
-	                        t, head[t].c_str()); }
+            { G_conf.LogMessage(L_DEBUG, "ParseArticle: --- head[%03d]: '%s'\n",
+                                t, head[t].c_str()); }
         for (t=0; t<body.size(); t++)
             { G_conf.LogMessage(L_DEBUG, "ParseArticle: --- body[%03d]: '%s'\n",
-	                        t, body[t].c_str()); }
+                                t, body[t].c_str()); }
     }
 
     return(0);
@@ -1047,25 +1065,25 @@ void Group::UpdatePath(vector<string>&header)
     for ( uint t=0; t<header.size(); t++ )
     {
         if ( strncasecmp(header[t].c_str(), pathstr, pathlen) == 0 )
-	{
-	    string info = hostname + ", ";
-	    if ( header[t].c_str()[5] != ' ' )
-	    {
-		// "Path:lasthost.." -> "Path: lasthost.."
-	        header[t].insert(5," ");
-	    }
+        {
+            string info = hostname + ", ";
+            if ( header[t].c_str()[5] != ' ' )
+            {
+                // "Path:lasthost.." -> "Path: lasthost.."
+                header[t].insert(5," ");
+            }
 
-	    // "Path: lasthost.." -> "Path: thishost, lasthost.."
-	    header[t].insert(6, info);
-	    found = 1;
-	}
+            // "Path: lasthost.." -> "Path: thishost, lasthost.."
+            header[t].insert(6, info);
+            found = 1;
+        }
     }
 
     // CREATE NEW PATH (IF NONE EXISTS)
     if ( ! found )
     {
-	string newpath = "Path: " + hostname;
-	header.push_back(newpath);
+        string newpath = "Path: " + hostname;
+        header.push_back(newpath);
     }
 }
 
@@ -1093,8 +1111,8 @@ int Group::IsValidGroup()
 //    Example: news clients can generate either "Message-ID" or "Message-Id".
 //
 int Group::GetHeaderValue(vector<string> &header,
-			  const char *fieldname,
-			  string& value) const
+                          const char *fieldname,
+                          string& value) const
 {
     int len = strlen(fieldname);
     for ( uint t=0; t<header.size(); t++ )
@@ -1103,8 +1121,8 @@ int Group::GetHeaderValue(vector<string> &header,
         {                                                 // "Message-ID: <foo>"
             const char *vp = header[t].c_str() + len;     // " <foo>"
             while ( *vp && isspace(*vp & 255) ) ++vp;     // "<foo>"
-	    // printf("DEBUG: found '%s', value='%s'\n", fieldname, vp);
-	    value = vp;
+            // printf("DEBUG: found '%s', value='%s'\n", fieldname, vp);
+            value = vp;
             return 0;
         }
     }
@@ -1126,10 +1144,10 @@ int Group::GetHeaderIndex(vector<string> &header, const char *fieldname) const
     for ( uint t=0; t<header.size(); t++ )
     {
         if ( strncasecmp(header[t].c_str(), fieldname, len) == 0 )
-	{
-	    // printf("DEBUG: found '%s' at index %u\n", fieldname, t);
-	    return int(t);
-	}
+        {
+            // printf("DEBUG: found '%s' at index %u\n", fieldname, t);
+            return int(t);
+        }
     }
     // printf("DEBUG: NOT FOUND '%s'\n", fieldname);
     return -1;

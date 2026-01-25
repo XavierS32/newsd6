@@ -1,8 +1,9 @@
+// vim: autoindent tabstop=8 shiftwidth=4 expandtab softtabstop=4
 //
 // Article.C -- Manage newsgroup articles
 //
 // Copyright 2003 Michael Sweet
-// Copyright 2002 Greg Ercolano
+// Copyright 2002-2024 Greg Ercolano
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -27,15 +28,15 @@
 //
 static void SplitKeyValue(char *s, string& key, string& val)
 {
-    key = ""; val = "";		// empty strings first
+    key = ""; val = "";         // empty strings first
     char *sep = strchr(s, ':');
-    if ( ! sep ) return;	// malformed?
+    if ( ! sep ) return;        // malformed?
 
     // Parse key
-    ++sep;			// just past ':'
+    ++sep;                      // just past ':'
     char save = *sep;
-    *sep = '\0';		// "To: fred" -> "To:\0fred"
-    key = s;			// key="To:"
+    *sep = '\0';                // "To: fred" -> "To:\0fred"
+    key = s;                    // key="To:"
     *sep = save;
 
     // Parse value, skip all leading white (if any)
@@ -61,7 +62,7 @@ string Article::GetArticlePath(const char* group, ulong artnum)
                pathgroup + string("/") +
                ultos_SUBS((artnum/1000)*1000) + "/" + ultos_SUBS(artnum));
     else
-        return(string(G_conf.SpoolDir()) + string("/") +	// "/spooldir/rush/general/1234"
+        return(string(G_conf.SpoolDir()) + string("/") +        // "/spooldir/rush/general/1234"
                pathgroup + string("/") + ultos_SUBS(artnum));
 }
 
@@ -71,23 +72,23 @@ string Article::GetArticlePath(const char* group, ulong artnum)
 int Article::_ParseHeader(string& key, string& val)
 {
     // fprintf(stderr, "PARSING KEY='%s' VAL='%s'\n", key.c_str(), val.c_str());
-    
+
     // HEADER NAMES ARE CASE INSENSITIVE: INTERNET DRAFT (Son of RFC1036)
     const char *s = key.c_str();
-    if ( strcasecmp(s, "Subject:" ) == 0 ) 
-	{ subject = val; }
+    if ( strcasecmp(s, "Subject:" ) == 0 )
+        { subject = val; }
     else if ( strcasecmp(s, "From:" ) == 0 )
-	{ from = val; }
+        { from = val; }
     else if ( strcasecmp(s, "Date:" ) == 0 )
-	{ date = val; }
+        { date = val; }
     else if ( strcasecmp(s, "Xref:" ) == 0 )
-	{ xref = val; }
-    else if ( strcasecmp(s, "Message-ID:") == 0 ) 
-	{ messageid = val; }
-    else if ( strcasecmp(s, "References:") == 0 ) 
-	{ references = val; }
-    else if ( strcasecmp(s, "Lines:") == 0 ) 
-	{ lines = atoi(val.c_str()); }
+        { xref = val; }
+    else if ( strcasecmp(s, "Message-ID:") == 0 )
+        { messageid = val; }
+    else if ( strcasecmp(s, "References:") == 0 )
+        { references = val; }
+    else if ( strcasecmp(s, "Lines:") == 0 )
+        { lines = atoi(val.c_str()); }
     else
         return(-1);
     return(0);
@@ -97,10 +98,10 @@ int Article::_ParseHeader(string& key, string& val)
 int Article::Load(const char *groupname, ulong num)
 {
     // ZERO OUT FIELDS
-    //group       = "";		// don't clear; parent may call us w/this->group
+    //group       = "";         // don't clear; parent may call us w/this->group
     filename      = "";
     number        = num;
-    valid         = 0;		// assume invalid until successful
+    valid         = 0;          // assume invalid until successful
     from          = "";
     date          = "";
     messageid     = "";
@@ -120,10 +121,10 @@ int Article::Load(const char *groupname, ulong num)
     FILE *fp = fopen(filename.c_str(), "r");
     if ( fp == NULL )
     {
-        errmsg = string("article ") + ultos_SUBS(number) + 
-	         string(" no longer exists: '") + filename +
-		 string("': ") + string(strerror(errno));
-	return(-1);
+        errmsg = string("article ") + ultos_SUBS(number) +
+                 string(" no longer exists: '") + filename +
+                 string("': ") + string(strerror(errno));
+        return(-1);
     }
 
     // Folding/unfolding of multiline headers
@@ -138,33 +139,33 @@ int Article::Load(const char *groupname, ulong num)
 
     while ( !done && fgets(s, sizeof(s)-1, fp) != NULL )
     {
-	// REMOVE TRAILING \n
+        // REMOVE TRAILING \n
         TruncateCrlf_SUBS(s);
 
-	switch ( s[0] )
-	{
-	    // CONTINUING TO UNFOLD MULTILINE HEADER? (RFC822 3.1.1)
-	    case '\t':
-	    case ' ':
-		val += s; // 1.50: leading white actually part of string
-		if ( val.length() >= FIELD_MAX )		// prevent ram DoS
-		    { val.erase(FIELD_MAX-1, val.length()); }	// truncate
-		continue;
+        switch ( s[0] )
+        {
+            // CONTINUING TO UNFOLD MULTILINE HEADER? (RFC822 3.1.1)
+            case '\t':
+            case ' ':
+                val += s; // 1.50: leading white actually part of string
+                if ( val.length() >= FIELD_MAX )                // prevent ram DoS
+                    { val.erase(FIELD_MAX-1, val.length()); }   // truncate
+                continue;
 
-	    // END OF HEADERS?
-	    case '\0':
-		if ( key != "" )		// parse previous header, if any
-		    _ParseHeader(key, val);
-		done = 1;
-		break;
+            // END OF HEADERS?
+            case '\0':
+                if ( key != "" )                // parse previous header, if any
+                    _ParseHeader(key, val);
+                done = 1;
+                break;
 
-	    // NEW HEADER?
-	    default:
-		if ( key != "" )		// parse previous header, if any
-		   _ParseHeader(key, val);
-		SplitKeyValue(s, key, val);
-		break;
-	}
+            // NEW HEADER?
+            default:
+                if ( key != "" )                // parse previous header, if any
+                   _ParseHeader(key, val);
+                SplitKeyValue(s, key, val);
+                break;
+        }
     }
     fclose(fp);
 
@@ -181,7 +182,7 @@ int Article::Load(const char *groupname, ulong num)
 int Article::Load(ulong num)
 {
     if ( group == "" )
-	{ errmsg = "No group selected"; return(-1); }
+        { errmsg = "No group selected"; return(-1); }
 
     return(Load(group.c_str(), num));
 }
@@ -199,10 +200,10 @@ int Article::SendArticle(int fd, int head, int body)
     if ( fp == NULL )
     {
         errmsg = "article ";
-	errmsg.append(ultos_SUBS(number));
-	errmsg.append(" no longer exists: ");
-	errmsg.append(strerror(errno));
-	return(-1);
+        errmsg.append(ultos_SUBS(number));
+        errmsg.append(" no longer exists: ");
+        errmsg.append(strerror(errno));
+        return(-1);
     }
 
     // Line buffer
@@ -221,34 +222,34 @@ int Article::SendArticle(int fd, int head, int body)
     while ( fgets(s, LINE_LEN, fp) )
     {
         if ( mode == MODE_SEP )
-	{
-	    // MOVED OFF SEPARATOR INTO BODY
-	    mode = MODE_BODY;
-	}
-	else if ( s[0] == '\n' && mode == MODE_HEAD )
-	{
-	    // END OF HEADER, AND NOT SENDING BODY? DONE
-	    mode = MODE_SEP;              // end of header
-	    if ( body == 0 ) { break; }	  // not sending body? done
-	}
+        {
+            // MOVED OFF SEPARATOR INTO BODY
+            mode = MODE_BODY;
+        }
+        else if ( s[0] == '\n' && mode == MODE_HEAD )
+        {
+            // END OF HEADER, AND NOT SENDING BODY? DONE
+            mode = MODE_SEP;              // end of header
+            if ( body == 0 ) { break; }   // not sending body? done
+        }
 
-	// LINE TOO LONG? -- TRUNCATE
-	s[LINE_LEN-4] = '\n';
-	s[LINE_LEN-3] = 0;
+        // LINE TOO LONG? -- TRUNCATE
+        s[LINE_LEN-4] = '\n';
+        s[LINE_LEN-3] = 0;
 
-	char *ss = strpbrk(s, "\n\r");    // truncate on occurance of \n or \r
-	if ( ss )
-	{
-	    // TERMINATE WITH CRLF
-	    *ss++ = '\r';
-	    *ss++ = '\n';
-	    *ss   = '\0';
-	}
+        char *ss = strpbrk(s, "\n\r");    // truncate on occurance of \n or \r
+        if ( ss )
+        {
+            // TERMINATE WITH CRLF
+            *ss++ = '\r';
+            *ss++ = '\n';
+            *ss   = '\0';
+        }
 
-	if ( ( mode == MODE_HEAD && head ) ||
-	     ( mode == MODE_BODY && body ) ||
-	     ( mode == MODE_SEP && head && body ) )
-	{
+        if ( ( mode == MODE_HEAD && head ) ||
+             ( mode == MODE_BODY && body ) ||
+             ( mode == MODE_SEP && head && body ) )
+        {
             // Handle dot-stuffing:
             //     's' is a normal line of data,
             //     's-1' is the pre-dot-stuffed line of data.
@@ -256,7 +257,7 @@ int Article::SendArticle(int fd, int head, int body)
             char *sw = s[0] == '.' ? (s-1) : s;         // sw: string to write
             write(fd, sw, strlen(sw));
             G_conf.LogMessage(L_DEBUG, "SEND: %s", sw);
-	}
+        }
     }
     fclose(fp);
     return(0);
@@ -289,33 +290,33 @@ string Article::Overview(const char *overview[])
     string reply = ultos_SUBS(Number());
     for ( int r=0; overview[r]; r++ )
     {
-	// HEADER NAMES ARE CASE INSENSITIVE: INTERNET DRAFT (Son of RFC1036)
-	if (!strcasecmp(overview[r], "Subject:")) 
-	    { reply += string("\t") + SanitizeOverview(subject); }
-	else if (!strcasecmp(overview[r], "From:"))
-	    { reply += string("\t") + SanitizeOverview(from); }
-	else if (!strcasecmp(overview[r], "Date:"))
-	    { reply += string("\t") + SanitizeOverview(date); }
-	else if (!strcasecmp(overview[r], "Message-ID:"))
-	    { reply += string("\t") + SanitizeOverview(messageid); }
-	else if (!strcasecmp(overview[r], "References:"))
-	    { reply += string("\t") + SanitizeOverview(references); }
-	else if (!strcasecmp(overview[r], "Lines:"))
-	{
-	    reply += "\t"; 
-	    if ( lines > 0 )
-		{ reply += ultos_SUBS(lines); } 
-	}
-	else if (!strcasecmp(overview[r], "Bytes:"))
-	{
-	    reply += "\t";	// WE DONT KEEP TRACK OF BYTES, LEAVE EMPTY
-	}
-	else if (!strcasecmp(overview[r], "Xref:full"))
-	{
-	    reply += "\t"; 
-	    if ( xref != "" )
-		{ reply += string("Xref: ") + SanitizeOverview(xref); }
-	}
+        // HEADER NAMES ARE CASE INSENSITIVE: INTERNET DRAFT (Son of RFC1036)
+        if (!strcasecmp(overview[r], "Subject:"))
+            { reply += string("\t") + SanitizeOverview(subject); }
+        else if (!strcasecmp(overview[r], "From:"))
+            { reply += string("\t") + SanitizeOverview(from); }
+        else if (!strcasecmp(overview[r], "Date:"))
+            { reply += string("\t") + SanitizeOverview(date); }
+        else if (!strcasecmp(overview[r], "Message-ID:"))
+            { reply += string("\t") + SanitizeOverview(messageid); }
+        else if (!strcasecmp(overview[r], "References:"))
+            { reply += string("\t") + SanitizeOverview(references); }
+        else if (!strcasecmp(overview[r], "Lines:"))
+        {
+            reply += "\t";
+            if ( lines > 0 )
+                { reply += ultos_SUBS(lines); }
+        }
+        else if (!strcasecmp(overview[r], "Bytes:"))
+        {
+            reply += "\t";      // WE DONT KEEP TRACK OF BYTES, LEAVE EMPTY
+        }
+        else if (!strcasecmp(overview[r], "Xref:full"))
+        {
+            reply += "\t";
+            if ( xref != "" )
+                { reply += string("Xref: ") + SanitizeOverview(xref); }
+        }
     }
     return(reply);
 }
