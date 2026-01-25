@@ -7,20 +7,26 @@ WHAT IS NEWSD?
     Newsd is a single host NNTP news server for managing private
     newsgroups (NOT a part of usenet).
     
-    It is useful for serving private newsgroup(s) to an intranet
-    or the Internet. It can receive postings via NNTP or via a
-    mail gateway.
+    It's useful for serving private newsgroup(s) to an intranet
+    or the Internet. It can receive posts via NNTP, or as incoming
+    email via newsd's "-mailgateway" flag.
 
     Messages can be read and replied to using NNTP clients;
     tested with Thunderbird and Opera. One can also create
-    web tools to monitor the newsgroup spooler directly,
-    or via NNTP.
+    web tools to monitor the newsgroup spooler directly or via NNTP.
     
-    Newsd does /NOT/ interface with other news servers, and cannot
-    manage distributed news feeds, i.e. Usenet news. This is what
-    keeps newsd simple, acting as a single server for newsgroups
-    that NNTP clients can connect to for interaction.
+    The article database is managed as simple clear text, one file per
+    article, and one directory per newsgroup.
+
+    A common modern use for newsd is to act as a secondary backup
+    for e.g. google groups, which can handle front end posts and
+    complex spam prevention. Posts to the google groups can be cc'ed
+    to newsd's backend via the mail gateway. This allows local archival
+    of all group posts, and can act as a read-only NNTP interface to the group.
     
+    Newsd does /NOT/ interface with other Usenet news servers, and cannot act
+    as a "usenet node". This keeps newsd simple, acting as a single server
+    for local newsgroups that NNTP clients can connect to for interaction.
 
 LICENSING
 
@@ -28,20 +34,18 @@ LICENSING
     available under the terms of the GNU General Public
     License.  See the file "LICENSE" for more info.
 
-
 BUILD INSTRUCTIONS
 
-    Run GNU make to build the newsd binary:
+    Run 'make' in the top level directory to build the newsd binary:
 
         make
-        
-    (NOTE: on some systems 'gnu make' is called 'gmake')
 
-    Currently newsd reverted to old school separate Makefiles
-    to manage supporting different operating systems. (I find
-    autoconf too complicated, and haven't fully learned cmake yet)
+    'make html' and 'make man' builds the HTML docs and manpages respectively.
+    
+    Currently newsd uses "old school" separate Makefiles to manage supporting
+    different operating systems. (I find autoconf and cmake too complicated).
 
-    The correct file will be loaded automatically (if it exists), e.g. 
+    The correct file will be loaded automatically, e.g. 
         
         Makefile.Linux          -- linux presets
         Makefile.FreeBSD        -- FreeBSD presets
@@ -87,7 +91,7 @@ BUILD INSTRUCTIONS
             $HOME/newsd/test/bin/newsd          -- the newsd executable
             $HOME/newsd/test/etc/newsd.conf     -- a pre-configured newsd.conf
             $HOME/newsd/test/log/               -- newsd.log will be written here
-            $HOME/newsd/test/spool/             -- newsgroups will be managed here
+            $HOME/newsd/test/spool/             -- newsgroup articles will be managed here
             $HOME/newsd/test/man/               -- manual pages
 
     To uninstall newsd from that directory hierarchy, use:
@@ -111,11 +115,11 @@ INSTALL INSTRUCTIONS
           an existing user account to use, or create the news account
           (Linux: 'adduser news', OSX: System Preferences).
 
-          Either way, this user will own the news spooler directory,
+          Either way, this user will own the news spooler directory
           and its contents.
 
-    Now try running the daemon in foreground mode with debugging
-    enabled, to see if it likes your settings:
+    Now try running the daemon in foreground mode (-f) with debugging
+    enabled (-d) to see if it likes your settings:
     
         ./newsd -d -f
 
@@ -125,8 +129,8 @@ INSTALL INSTRUCTIONS
 
     ..which will log output to ${LOG_DIR}/newsd.log
 
-    The daemon should continue running, logging
-    messages whenever NNTP clients connect to it.
+    The daemon should continue running, logging messages whenever NNTP clients
+    connect to it.
 
 CONFIGURING NEWSD TO START ON BOOT
 
@@ -172,7 +176,6 @@ MAIL GATEWAY
     configure 'newsd -mailgateway <GROUP_NAME>' as the mail
     forward command.
 
-
 DOCUMENTATION
 
     There's documentation in both man page format and HTML:
@@ -184,13 +187,11 @@ DOCUMENTATION
     the man pages, such that 'man newsd' and 'man newsd.conf'
     work normally.
 
-
 FEATURES
 
     Newsd provides simple file-based system administration.  No
     satellite binaries or scripts are needed to install,
     configure, administer, or maintain newsd.
-
 
 LIMITATIONS
    
