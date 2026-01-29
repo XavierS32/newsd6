@@ -1139,6 +1139,13 @@ int Server::Listen()
 	    { errmsg = "setsockopt(SO_KEEPALIVE): "; errmsg += strerror(errno); return(-1); }
     }
 
+	// 2. Set IPV6_V6ONLY to make sure only accept IPv6 connection
+	{
+		int on = 1;
+	if ( setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(on)) < 0 )
+		{ perror("newsd: setsockopt(IPV6_V6ONLY) failed"); }
+	}
+
     while (bind(sock, (struct sockaddr*)G_conf.Listen(),
                 sizeof(struct sockaddr_in6)) < 0)
 	{ perror("binding stream socket"); sleep(5); continue; }
