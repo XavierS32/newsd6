@@ -3,6 +3,7 @@
 //
 // Copyright 2003-2004 Michael Sweet
 // Copyright 2002-2024 Greg Ercolano
+// Copyright 2026 Xavier Shen (IPv6 modifications)
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -291,10 +292,10 @@ int Server::CommandLoop(const char *overview[])
 	    if ( G_conf.ErrorLog_Hex() ) {
 		// Handle if we should log any binary content in hex
 		char *line_safe = AsciiHexEncode(s);
-		G_conf.LogMessage(L_INFO, "GOT: '%s' from %s", line_safe, remhost.c_str());
+		G_conf.LogMessage(L_INFO, "GOT: '%s' from [%s]", line_safe, remhost.c_str());
 		free(line_safe);
 	    } else {
-		G_conf.LogMessage(L_INFO, "GOT: '%s' from %s", s, remhost.c_str());
+		G_conf.LogMessage(L_INFO, "GOT: '%s' from [%s]", s, remhost.c_str());
 	    }
 	}
 
@@ -1109,7 +1110,7 @@ int Server::CommandLoop(const char *overview[])
     }
 
     close(msgsock);
-    G_conf.LogMessage(L_INFO, "Connection from %s closed", GetRemoteIPStr());
+    G_conf.LogMessage(L_INFO, "Connection from [%s] closed", GetRemoteIPStr());
 
     return(0);
 }
@@ -1117,7 +1118,7 @@ int Server::CommandLoop(const char *overview[])
 // OPEN A TCP LISTENER ON THE CONFIGURED ADDRESS AND PORT
 int Server::Listen()
 {
-    if ((sock = socket (AF_INET,SOCK_STREAM,0)) < 0)
+    if ((sock = socket (AF_INET6,SOCK_STREAM,0)) < 0)
 	{ errmsg = "socket(): "; errmsg += strerror(errno); return(-1); }
 
     // Allow reuse of address to avoid "bind(): address already in use"
@@ -1139,7 +1140,7 @@ int Server::Listen()
     }
 
     while (bind(sock, (struct sockaddr*)G_conf.Listen(),
-                sizeof(struct sockaddr_in)) < 0)
+                sizeof(struct sockaddr_in6)) < 0)
 	{ perror("binding stream socket"); sleep(5); continue; }
 
     if ( listen(sock,5) < 0 )
@@ -1172,10 +1173,11 @@ int Server::Accept(ostringstream& remote_info)
 	return(-1);
     }
 
-    remote_info << "Connection from host "
-                << inet_ntoa(sin.sin_addr)
-                << ", port "
-                << ntohs(sin.sin_port);
+	char buf[INET6_ADDRSTRLEN]; // temp buffer for IPv6 address string
+    remote_info << "Connection from host ["
+                <<  inet_ntop(AF_INET6, &sin.sin6_addr, buf, sizeof(buf))
+                << "], port "
+                << ntohs(sin.sin6_port);
 
     return (0);
 }

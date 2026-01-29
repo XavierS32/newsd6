@@ -4,6 +4,7 @@
 //
 // Copyright 2003-2004 Michael Sweet
 // Copyright 2002-2024 Greg Ercolano
+// Copyright 2026 Xavier Shen (IPv6 modifications)
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -40,7 +41,7 @@ class Configuration
     int         hostnamelookups;        // do hostname lookups?
     int         norecurse_msgdir;       // when searching for groups, don't recurse into msg dirs
     int         msgmod_dirs;            // Use modulus msg dirs, eg. 100/{100,101,102..199}
-    struct sockaddr_in listen;          // Listen address
+    struct sockaddr_in6 listen;          // Listen address
     string      errorlog;               // Log file
     int         errorlog_hex;           // Log non-ASCII chars in hex, e.g. <0x##>
     int         loglevel;               // Log level
@@ -107,7 +108,7 @@ public:
     // Get/set the current Listen/Port option...
     void Listen(const char *l);
     void Listen(int p);
-    struct sockaddr_in *Listen() { return (&listen); }
+    struct sockaddr_in6 *Listen() { return (&listen); }
 
     // Get/set the current LogLevel option...
     void LogLevel(int l) { loglevel = l; }
