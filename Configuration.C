@@ -4,6 +4,7 @@
 //
 // Copyright 2003-2004 Michael Sweet
 // Copyright 2002-2024 Greg Ercolano
+// Copyright 2026 Xavier Shen (IPv6 modifications)
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -74,85 +75,73 @@ Configuration::Configuration()
 // Listen on a specific address and port...
 void Configuration::Listen(const char *l)
 {
-    char                hostname[256];  // Hostname or IP
+    char                hostname[256];  // Hostname or IPv6
     char                portname[256];  // Port number or name
-    char                *ptr;           // Pointer into port
-    struct hostent      *host;          // Host address
-    struct servent      *port;          // Service data
-    long                p;              // Port number
 
-    // Initialize the listen address to "nntp"...
-    listen.sin_family      = AF_INET;
-    listen.sin_addr.s_addr = INADDR_ANY;
-    listen.sin_port        = htons(119);
-
-    // Try to grab a hostname and port number...
-    switch (sscanf(l, "%255[^:]:%255s", hostname, portname))
+    // Try to grab a hostname and port string...
+    if (l[0] == '[') // [IPv6]:port
     {
-        case 1 :
-            // Hostname is a port number...
+        if (sscanf(l, "[%255[^]]]:%255s", hostname, portname) <= 1)
+        {
+            fprintf(stderr, "newsd: Bad [IPv6]:port format '%s'\n", l);
+            return;
+        }
+    }
+    else // hostname:port | port
+    {
+        int parts = sscanf(l, "%255[^:]:%255s", hostname, portname);
+        if (parts == 1) // port
+        {
+            // Hostname is a port string...
             strcpy(portname, hostname);
             strcpy(hostname, "*");
-            break;
-
-        case 2 :
-            break;
-
-        default :
-            fprintf(stderr, "news: Unable to decode address '%s'\n", l);
-            return;
+        }
     }
 
-    // Decode the hostname and port number as needed...
-    if (hostname[0] && strcmp(hostname, "*"))
-    {
-        if ((host = gethostbyname(hostname)) == NULL)
-        {
-            fprintf(stderr,
-                "newsd: gethostbyname(%s) failed - %s\n"
-                "newsd: Using address 127.0.0.1 (localhost)\n",
-                hostname, hstrerror(h_errno));
-        }
-        else if (host->h_length != 4 || host->h_addrtype != AF_INET)
-        {
-            fprintf(stderr,
-                "newsd: gethostbyname(%s) did not return an IPv4 address!\n"
-                "newsd: Using address 127.0.0.1 (localhost)\n",
-                hostname);
-        }
-        else
-            memcpy(&(listen.sin_addr), host->h_addr, 4);
-    }
-    else if (!strcmp(hostname, "*"))
-        listen.sin_addr.s_addr = INADDR_ANY;
+    // Decode the hostname and port string as needed...
+    const char *node =
+        (strcmp(hostname, "*") == 0 || hostname[0] == '\0')
+        ? NULL /* accept any  */
+        : hostname;
 
-    if (portname[0] != '\0')
+    if (portname[0] == '\0')
     {
-        if (isdigit(portname[0]))
+        strcpy(portname, "119");
+    }
+    else if (isdigit(portname[0]))
+    {
+        char *endptr; // Pointer into port
+        long p = strtol(portname, &endptr, 10); // Port number
+        if (p <= 0 || p > 65535 || *endptr != '\0')
         {
-            p = strtol(portname, &ptr, 10);
-            if (p <= 0 || *ptr)
-            {
-                fprintf(stderr,
-                    "newsd: Bad port number '%s'\n"
-                    "newsd: Using port 119 (nntp)\n",
-                    portname);
-            }
-            else
-                listen.sin_port = htons(p);
+            fprintf(stderr,
+                "newsd: Bad port number '%s'\n"
+                "newsd: Using port 119 (nntp)\n",
+                portname);
+            strcpy(portname, "119");
         }
-        else
-        {
-            if ((port = getservbyname(portname, "tcp")) == NULL)
-            {
-                fprintf(stderr,
-                    "newsd: getservbyname(\"%s\", \"tcp\") failed!\n"
-                    "newsd: Using port 119 (nntp)\n",
-                    portname);
-            }
-            else
-                listen.sin_port = port->s_port;
-        }
+    }
+
+    // Resolve the hostname and port string to socket address...
+    struct addrinfo hints, *res;
+    memset(&hints, 0, sizeof(hints));
+
+    hints.ai_family = AF_INET6;      // Use IPv6 only
+    hints.ai_socktype = SOCK_STREAM; // TCP socket
+    hints.ai_flags = AI_PASSIVE;     // For server binding
+
+    int status = getaddrinfo(node, portname, &hints, &res);
+    if (status != 0)
+    {
+        fprintf(stderr, "newsd: getaddrinfo(\"%s\", \"%s\") failed for - %s\n",
+                node == NULL ? "(null)" : node,
+                portname,
+                gai_strerror(status));
+    }
+    else if (res->ai_addrlen <= sizeof(listen))
+    {
+        memcpy(&listen, res->ai_addr, res->ai_addrlen);
+        freeaddrinfo(res);
     }
 }
 
@@ -160,10 +149,10 @@ void Configuration::Listen(const char *l)
 void Configuration::Listen(int p)
 {
     // Listen on the "any" address with the specified port; needs to be
-    // updated for IPv6 at some point...
-    listen.sin_family      = AF_INET;
-    listen.sin_addr.s_addr = INADDR_ANY;
-    listen.sin_port        = htons(p);
+    // updated for IPv6 at some point... // Now it supports IPv6 only.
+    listen.sin6_family      = AF_INET6;
+    listen.sin6_addr = in6addr_any;
+    listen.sin6_port        = htons(p);
 }
 
 #define BAD_VALUE()     \
@@ -732,12 +721,9 @@ void Configuration::LogSelf(int loglevel)
     LogMessage(loglevel, "HostnameLookups %s",
                       HostnameLookups() == 0 ? "off" :
                           HostnameLookups() == 1 ? "on" : " double");
-    struct sockaddr_in *addr = Listen();
-    unsigned ipaddr = ntohl(addr->sin_addr.s_addr);
-    LogMessage(loglevel, "Listen %u.%u.%u.%u:%d",
-                      (ipaddr >> 24) & 255, (ipaddr >> 16) & 255,
-                      (ipaddr >> 8) & 255, ipaddr & 255,
-                      ntohs(addr->sin_port));
+    struct sockaddr_in6 *addr = Listen();
+	char buf[INET6_ADDRSTRLEN]; // temp buffer for IPv6 address string
+	LogMessage(loglevel, "[%s]:%d", inet_ntop(AF_INET6, &addr->sin6_addr, buf, sizeof(buf)), ntohs(addr->sin6_port));
     LogMessage(loglevel, "LogLevel %s",
                       LogLevel() == L_ERROR ? "error" :
                           LogLevel() == L_INFO ? "info" : "debug");

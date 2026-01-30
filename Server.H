@@ -3,6 +3,7 @@
 //
 // Copyright 2003-2004 Michael Sweet
 // Copyright 2002-2024 Greg Ercolano
+// Copyright 2026 Xavier Shen (IPv6 modifications)
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public Licensse as published by
@@ -32,11 +33,13 @@ class Server
     int sock,           // listener socket (accept())
         msgsock;        // transaction socket (read/write)
     char *buf;          // line buffer (internal)
-    struct sockaddr_in sin;
+    struct sockaddr_in6 sin;
 
     Group group;        // current group
     Article article;    // current article
     string errmsg;
+
+    char ipBuf[INET6_ADDRSTRLEN];	// temp buffer for IPv6 address string
 
 public:
 
@@ -60,7 +63,7 @@ public:
     int MsgSock() { return(msgsock); }
     int Sock() { return(sock); }
     const char *GetRemoteIPStr()
-        { return(inet_ntoa(sin.sin_addr)); }
+        { return(inet_ntop(AF_INET6, &sin.sin6_addr, ipBuf, sizeof(ipBuf))); }
 
     int Send(const char *msg);
     int IsAllowed(int op);
