@@ -1,232 +1,46 @@
-# newsd
-newsd -- Standalone Local NNTP News Server
-------------------------------------------
+# newsd6 - IPv6-Only Fork
 
-WHAT IS NEWSD?
-    
-    Newsd is a single host NNTP news server for managing private
-    newsgroups (NOT a part of usenet).
-    
-    It's useful for serving private newsgroup(s) to an intranet
-    or the Internet. It can receive posts via NNTP, or as incoming
-    email via newsd's "-mailgateway" flag.
+This is a downstream fork of the [newsd](https://github.com/erco77/newsd)
+project with added support for IPv6-only environments and other minor fixes.
+This version retains all functionality of the original project while ensuring
+compatibility with IPv6-only networks.
 
-    Messages can be read and replied to using NNTP clients;
-    tested with Thunderbird and Opera. One can also create
-    web tools to monitor the newsgroup spooler directly or via NNTP.
-    
-    The article database is managed as simple clear text, one file per
-    article, and one directory per newsgroup.
+**Important:** This fork hasn't undergone rigorous testing and may introduce new
+bugs. Use it at your own discretion. See the [GNU General Public
+License](https://www.gnu.org/licenses/) for more details.
 
-    A common modern use for newsd is to act as a secondary backup
-    for e.g. google groups, which can handle front end posts and
-    complex spam prevention. Posts to the google groups can be cc'ed
-    to newsd's backend via the mail gateway. This allows local archival
-    of all group posts, and can act as a read-only NNTP interface to the group.
-    
-    Newsd does /NOT/ interface with other Usenet news servers, and cannot act
-    as a "usenet node". This keeps newsd simple, acting as a single server
-    for local newsgroups that NNTP clients can connect to for interaction.
+## What’s New
 
-LICENSING
+### IPv6-Only Support
 
-    Newsd comes with complete free source code.  Newsd is
-    available under the terms of the GNU General Public
-    License.  See the file "LICENSE" for more info.
+* Migrated socket logic from IPv4 to IPv6-only.
+* Enhanced `Listen/Port` configuration directive with parsing logic for
+  `[IPv6]:port`.
+* Set `IPV6_V6ONLY` to ensure that only IPv6 connections are accepted.
 
-BUILD INSTRUCTIONS
+### Compatibility Fixes
 
-    Run 'make' in the top level directory to build the newsd binary:
+* **[EXPERIMENTAL/RISK]** Fixed `EBADF` error in `flock(LOCK_SH)` by changing
+  the open mode to `O_RDWR`, improving compatibility with NFSv4 filesystems.
+  * **WARNING:** This change may introduce lock-related issues under certain
+    conditions, as identified by upstream maintainers. Use with caution in
+    production environments. (See [upstream
+    discussion](https://github.com/erco77/newsd/pull/4) for details.)
 
-        make
+## Usage
 
-    'make html' and 'make man' builds the HTML docs and manpages respectively.
-    
-    Currently newsd uses "old school" separate Makefiles to manage supporting
-    different operating systems. (I find autoconf and cmake too complicated).
+For detailed installation instructions and usage, please refer to the original
+project's README: [newsd README](https://github.com/erco77/newsd).
 
-    The correct file will be loaded automatically, e.g. 
-        
-        Makefile.Linux          -- linux presets
-        Makefile.FreeBSD        -- FreeBSD presets
+## Branching Strategy
 
-    If your OS is not offered, run 'uname' to find the name
-    of your operating system, and make copy one of the files
-    most like your OS, e.g.
+- **`master`**: Used to synchronize with the upstream project.
+- **`develop`**: This is the main development branch, where all feature branches
+  are merged before being considered stable. It holds the current working
+  version of the project.
+- **`feat/..`**: Used for developing new features and changes.
 
-        $ uname
-        OpenBSD
+## License & Credits
 
-        $ cp Makefile.FreeBSD Makefile.OpenBSD
-
-    Then edit the new file, and make any necessary customizations.
-
-    If you want newsd to default to using a particular directory
-    hierarchy, e.g. $HOME/newsd/test, edit your Makefile.XXX
-    file (XXX being your operating system's name), and change
-    the settings, e.g.
-
-        $ vi Makefile.Linux
-        ____________________________________________________
-        # Linux settings
-        CXX          = g++
-        BIN_DIR     := /usr/myhome/newsd/test/bin             << Make these
-        CONFIG_FILE := /usr/myhome/newsd/test/etc/newsd.conf  << changes.
-        SPOOL_DIR   := /usr/myhome/newsd/test/spool           << Be sure to use
-        LOG_DIR     := /usr/myhome/newsd/test/log             << absolute paths
-        MAN_DIR     := /usr/myhome/newsd/test/man             << for each setting.
-        SENDMAIL    := /usr/sbin/sendmail
-        ____________________________________________________
-
-    Once configured, these two commands will create the 'test'
-    directory hierarchy, and builds/installs newsd into it:
-
-        $ mkdir -p /usr/myhome/newsd/test/{bin,etc,spool,log,man}
-
-        $ make clean all install
-
-    This will preconfigure the newsd.conf file and compiled-in
-    defaults into newsd to use that directory layout:
-
-            $HOME/newsd/test/bin/newsd          -- the newsd executable
-            $HOME/newsd/test/etc/newsd.conf     -- a pre-configured newsd.conf
-            $HOME/newsd/test/log/               -- newsd.log will be written here
-            $HOME/newsd/test/spool/             -- newsgroup articles will be managed here
-            $HOME/newsd/test/man/               -- manual pages
-
-    To uninstall newsd from that directory hierarchy, use:
-
-        make uninstall
-
-INSTALL INSTRUCTIONS
-
-    Once the software builds (see above), you should be able to
-    install the software with:
-
-        make install
-
-    Then edit the installed newsd.conf file to make any needed
-    changes for your setup.
-
-    NOTE: By default, the newsd.conf file's 'User' option forces newsd
-          to run as the non-root user 'news'.
-          
-          If that user doesn't exist, either change the setting to
-          an existing user account to use, or create the news account
-          (Linux: 'adduser news', OSX: System Preferences).
-
-          Either way, this user will own the news spooler directory
-          and its contents.
-
-    Now try running the daemon in foreground mode (-f) with debugging
-    enabled (-d) to see if it likes your settings:
-    
-        ./newsd -d -f
-
-    ..or to run it in the background as a daemon, then just:
-
-        ./newsd
-
-    ..which will log output to ${LOG_DIR}/newsd.log
-
-    The daemon should continue running, logging messages whenever NNTP clients
-    connect to it.
-
-CONFIGURING NEWSD TO START ON BOOT
-
-    See the bootscripts/<your_os>/README.txt file
-    for how to configure your machine to run newsd
-    automatically on boot.
-
-CREATING NEWSGROUPS
-
-    To create new newsgroups, you can use:
-
-        sudo ./newsd -newgroup
-
-    ..and just answer the questions.
-    
-    Once a new group is created, any news clients should
-    immediately be able to subscribe to the new group
-    and if posting is enabled, post messages to it.
-
-    Or, you can just as easily use unix commands to do
-    what 'newsd -newgroup' does. For example, to create
-    a rush.test newsgroup:
-
-        mkdir -m 755 -p ${SPOOL_DIR}/rush/test
-        chown -R news ${SPOOL_DIR}
-
-        ( echo description Test group;
-          echo creator     John Doe;
-          echo postok      1;
-          echo postlimit 0 ) > ${SPOOL_DIR}/rush/test/.config
-
-MAIL GATEWAY
-
-    Email messages can be injected into the newsd groups
-    using e.g.
-
-        cat email_message | ./newsd -mailgateway rush.general
-
-    ..which would add the text contents of email_message to
-    the newsgroup 'rush.general'.
-
-    For each email address to be used as a gateway to a group,
-    configure 'newsd -mailgateway <GROUP_NAME>' as the mail
-    forward command.
-
-DOCUMENTATION
-
-    There's documentation in both man page format and HTML:
-
-        make man        -- makes manual pages (ending in *.8)
-        make html       -- makes html docs (ending in *.html)
-    
-    'make install' should automatically create and install
-    the man pages, such that 'man newsd' and 'man newsd.conf'
-    work normally.
-
-FEATURES
-
-    Newsd provides simple file-based system administration.  No
-    satellite binaries or scripts are needed to install,
-    configure, administer, or maintain newsd.
-
-LIMITATIONS
-   
-    Refer to the "newsd" man page.
-
-HISTORY
-    
-    This tool was originally written by Greg Ercolano in January 2003
-    to manage newsgroups for his commercial product "Rush". At that time
-    the project was managed as a series of tar files:
-    http://seriss.com/people/erco/unixtools/newsd/
-
-    In 2004, Mike Sweet became interested in using newsd to replace
-    innd to manage the FLTK project's newsgroup, and later the CUPS 
-    series of newsgroups. Mike put newsd into service by November 3 2004.
-
-    Since then, FLTK and CUPS newsgroups were managed by newsd 1.44
-    between June 2005 and May 2013. In May 2013, Mike's server at easysw
-    crashed.
-    
-    Greg took over the FLTK website and moved the two main newsgroups
-    to google groups (mainly to manage spam better), but left newsd
-    in place to act as an NNTP mirror of the google groups, and to manage
-    the bugs, commits and administration newsgroups.
-
-    Since 2013, Greg has returned to maintaining newsd, and in 2017
-    put it up on github as: https://github.com/erco77/newsd, where its
-    public access can continue. The autoconf and web tools that Mike
-    added were removed to return the project to a simpler code base.
-
-REPORTING BUGS
-
-    Please use github's issue page:
-
-        https://github.com/erco77/newsd/issues
-
-    ..or email Greg directly: erco@seriss.com
-
+* Original author: Greg Ercolano, Michael Sweet.
+* Licensed under GPL 2.0 or later.

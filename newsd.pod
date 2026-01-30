@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-newsd - erco's simple nntp news server
+newsd - erco's simple nntp news server (IPv6-only downstream fork)
 
 =head1 SYNOPSIS
 
@@ -30,6 +30,8 @@ i.e. Usenet news.
 Each client connection forks a child, and the child remains
 running until the connection is closed, typically until the user
 closes their news reader which can mean a long time.
+
+This version is a downstream fork that adds full IPv6-only support.
 
 Options supported by newsd:
 
@@ -189,6 +191,10 @@ There are probably ways to cause a denial of service.
 Report bugs using the github issue page for the newsd project:
 https://github.com/erco77/newsd/issues
 
+For bugs related to IPv6 implementation or NFSv4 compatibility, please
+use the issue page of this fork:
+https://github.com/XavierS32/newsd6/issues
+
 =head1 SUPPORTED NEWS READERS
 
 I<newsd> has been tested with Netscape, Mozilla, Microsoft
@@ -203,15 +209,18 @@ work with most NNTP news readers, however.
 
 =item Michael Sweet, Hollywood, MD
 
+=item Xavier Shen (IPv6 modifications, 2026)
+
 =back
 
 =head1 COPYRIGHT
 
 I<newsd> is copyright 2002-2004 by Greg Ercolano and Michael
-Sweet. This program is free software; you can redistribute it
-and/or modify it under the terms of the GNU General Public
-License as published by the Free Software Foundation; either
-version 2 of the License, or (at your option) any later version.
+Sweet. Portions copyright 2026 by Xavier Shen. This program is
+free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
 
 =head1 NO WARRANTY
 

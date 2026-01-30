@@ -65,10 +65,10 @@ The default is "off".
 =item Listen <port>
 
 Listens on the specified address and/or port number for new
-connections. I<Address> can be an IP address, hostname, or "*"
-to specify the "any" address; if no address is specified, "*" is
-assumed. I<Port> can be a port number or TCP service name. The
-default is to listen on address "*" (any) and port "nntp" (119).
+connections. I<Address> can be an IPv6 address enclosed in square
+brackets, hostname, or "*" to specify the "any" address; if no address
+is specified, "*" is assumed. I<Port> can be a port number or TCP service
+name. The default is to listen on address "*" (any) and port "nntp" (119).
 
 =item LogLevel <error|info|debug>
 
@@ -444,15 +444,18 @@ work with most NNTP news readers, however.
 
 =item Mike Sweet, Hollywood, MD
 
+=item Xavier Shen (IPv6 modifications, 2026)
+
 =back
 
 =head1 COPYRIGHT
 
 I<newsd> is copyright 2002-2004 by Greg Ercolano and Michael
-Sweet. This program is free software; you can redistribute it
-and/or modify it under the terms of the GNU General Public
-License as published by the Free Software Foundation; either
-version 2 of the License, or (at your option) any later version.
+Sweet. Portions copyright 2026 by Xavier Shen. This program is
+free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
 
 =head1 NO WARRANTY
 

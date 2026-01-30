@@ -1,6 +1,21 @@
 newsd -- Change Log
 -------------------
 
+1.60-ipv6-1.00 -- January 29, 2026
+	- Initial Downstream Fork Release for IPv6-only environment
+	- Added full IPv6-only support
+		- Migrated socket logic from IPv4 to IPv6-only
+		- Enhanced Listen/Port configuration directive and its parsing logic
+		for [IPv6]:port
+		- Set IPV6_V6ONLY to ensure only IPv6 connections are accepted
+	- Updated documentation
+	- [EXPERIMENTAL/RISK] Fixed EBADF error in flock(LOCK_SH) by changing open
+	  mode to O_RDWR, enabling compatibility with NFSv4 filesystems
+		**WARNING:** This change may introduce lock-related issues under certain
+		conditions, as identified by upstream maintainers. Use with caution in
+		production environments. (See [upstream
+		discussion](https://github.com/erco77/newsd/pull/4) for details.)
+
 1.60 -- July 18, 2024
         - Added optional -post-command command line flag
 
